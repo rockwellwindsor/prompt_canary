@@ -15,4 +15,20 @@ RSpec.describe PromptCanary::Router do
       expect(PromptCanary::Router.choose(prompt_class, { user: { id: 42 } })).to eq(prompt_class.stable_version)
     end
   end
+
+  describe "with percent: 100 rollout" do
+    let(:prompt_class) do
+      stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
+        version("v1") { stable true; model "m"; system "s" }
+        version("v2") { model "m"; system "s"; rollout percent: 100 }
+      end)
+    end
+
+    it "always returns the partial version" do
+      10.times do |i|
+        result = PromptCanary::Router.choose(prompt_class, { call_id: i })
+        expect(result.name).to eq("v2")
+      end
+    end
+  end
 end
