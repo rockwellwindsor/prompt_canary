@@ -154,6 +154,24 @@ PromptCanary.subscribe("prompt_canary.demoted") do |payload|
 end
 ```
 
+## Examples
+
+Two runnable scripts are included in `examples/`. Both use a stubbed adapter and require no API key:
+
+```bash
+# Full call flow — routing, result structure, version distribution
+bundle exec ruby examples/demo.rb
+
+# Auto-rollback demo — seeds synthetic errors, runs monitor, watches demotion fire
+bundle exec ruby examples/auto_rollback.rb
+```
+
+Pass `--real` to `demo.rb` to hit the Anthropic API directly (requires `ANTHROPIC_API_KEY`):
+
+```bash
+ANTHROPIC_API_KEY=sk-... bundle exec ruby examples/demo.rb --real
+```
+
 ## Development
 
 ```bash
