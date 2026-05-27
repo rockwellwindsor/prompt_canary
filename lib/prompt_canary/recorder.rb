@@ -8,6 +8,14 @@ module PromptCanary
       @storage = storage
     end
 
+    def error_rate(prompt:, version:, over:)
+      records = @storage.read_recent(prompt: prompt, version: version, limit: over)
+      return 0.0 if records.empty?
+
+      errored = records.count { |r| !r[:error].nil? }
+      (errored.to_f / records.length).round(2)
+    end
+
     def record(prompt:, version:, telemetry:)
       @storage.write(
         prompt: prompt,

@@ -16,6 +16,22 @@ RSpec.describe PromptCanary::Recorder do
     }
   end
 
+  describe "#error_rate" do
+    it "returns the proportion of errored calls over the window" do
+      93.times { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry) }
+      7.times  { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry.merge(error: StandardError.new)) }
+
+      expect(recorder.error_rate(prompt: "InvoiceExtractor", version: "v1", over: 100)).to eq(0.07)
+    end
+
+    it "calculates rate over available records when fewer than the window" do
+      2.times { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry) }
+      1.times  { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry.merge(error: StandardError.new)) }
+
+      expect(recorder.error_rate(prompt: "InvoiceExtractor", version: "v1", over: 100)).to eq(0.33)
+    end
+  end
+
   describe "#record" do
     it "writes a record with the expected fields" do
       recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry)
