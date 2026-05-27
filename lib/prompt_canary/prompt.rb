@@ -67,10 +67,10 @@ module PromptCanary
         stable.first
       end
 
-      def call(context: {}, adapter: nil, **args)
-        version  = Router.choose(self, context)
+      def call(context: {}, adapter: nil, recorder: nil, **args)
+        version   = Router.choose(self, context)
         adapter  ||= resolve_adapter
-        recorder = Recorder.new(storage: resolve_storage)
+        recorder ||= Recorder.new(storage: resolve_storage)
 
         telemetry = adapter.call(version: version, args: args)
         recorder.record(prompt: name, version: version, telemetry: telemetry)

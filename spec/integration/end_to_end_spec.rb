@@ -36,4 +36,16 @@ RSpec.describe "Prompt.call end-to-end" do
     expect(result.version_used).to eq("v1")
     expect(result.model).to eq("claude-opus-4-7")
   end
+
+  it "records telemetry to the injected storage" do
+    storage  = PromptCanary::Storage::Memory.new
+    recorder = PromptCanary::Recorder.new(storage: storage)
+
+    InvoiceExtractor.call(user_message: "Invoice #123", adapter: fake_adapter, recorder: recorder)
+
+    records = storage.read_recent(prompt: "InvoiceExtractor", version: "v1", limit: 10)
+    expect(records.length).to eq(1)
+    expect(records.first[:latency_ms]).to eq(300)
+    expect(records.first[:error]).to be_nil
+  end
 end
