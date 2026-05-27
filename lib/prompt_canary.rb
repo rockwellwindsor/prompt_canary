@@ -10,6 +10,8 @@ module PromptCanary
   class Error < StandardError; end
   class ConfigurationError < Error; end
   class DuplicateVersionError < Error; end
+  class NoStableVersionError < Error; end
+  class AmbiguousStableVersionError < Error; end
 
   class << self
     def configure

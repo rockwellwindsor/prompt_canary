@@ -53,6 +53,15 @@ module PromptCanary
         @versions ||= []
       end
 
+      def stable_version
+        stable = versions.select(&:stable?)
+        raise AmbiguousStableVersionError, "#{self} has #{stable.length} stable versions. " \
+        																		"Only one version can be marked as stable." if stable.length > 1
+        raise NoStableVersionError, "#{self} has no stable version" if stable.empty?
+
+        stable.first
+      end
+
       def reset_registry!
         @versions = []
       end
