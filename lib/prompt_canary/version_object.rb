@@ -6,16 +6,29 @@ module PromptCanary
   class Version
     attr_reader :name, :model, :system, :rollout
 
-    def initialize(name:, model:, system:, rollout:, stable: false)
+    def initialize(name:, model:, system:, rollout:, stable: false, predicate: nil)
       @name = name
       @model = model
       @system = system
       @rollout = rollout
       @stable = stable
+      @predicate = predicate
     end
 
     def stable?
       @stable
+    end
+
+    def has_predicate?
+      !@predicate.nil?
+    end
+
+    def matches_predicate?(context)
+      return false unless @predicate
+
+      @predicate.call(context)
+    rescue StandardError
+      false
     end
 
     def partial_rollout?

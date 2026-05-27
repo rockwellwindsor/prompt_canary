@@ -16,6 +16,35 @@ RSpec.describe PromptCanary::Router do
     end
   end
 
+  describe "with a rollout_to predicate" do
+    let(:prompt_class) do
+      stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
+        version("v1") { stable true; model "m"; system "s" }
+        version("v2") do
+          model "m"
+          system "s"
+          rollout percent: 0
+          rollout_to { |ctx| ctx[:user]&.fetch(:beta, false) }
+        end
+      end)
+    end
+
+    it "routes beta users to the partial version regardless of percent" do
+      result = PromptCanary::Router.choose(prompt_class, { user: { beta: true } })
+      expect(result.name).to eq("v2")
+    end
+
+    it "routes non-beta users to stable" do
+      result = PromptCanary::Router.choose(prompt_class, { user: { beta: false } })
+      expect(result.name).to eq("v1")
+    end
+
+    it "falls back to stable when the predicate raises an exception" do
+      result = PromptCanary::Router.choose(prompt_class, { user: nil })
+      expect(result.name).to eq("v1")
+    end
+  end
+
   describe "with percent: 0 rollout" do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do

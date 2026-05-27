@@ -19,6 +19,10 @@ module PromptCanary
         @_rollout = value
       end
 
+      def rollout_to(&block)
+        @_predicate = block
+      end
+
       def model(value)
         @_model = value
       end
@@ -33,7 +37,8 @@ module PromptCanary
           model: _model,
           system: _system,
           rollout: _rollout,
-          stable: _stable
+          stable: _stable,
+          predicate: @_predicate
         )
       end
     end
