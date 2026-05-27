@@ -29,6 +29,9 @@ module PromptCanary
           tokens: { input: response.usage.input_tokens, output: response.usage.output_tokens },
           error: nil
         }
+      rescue ::Anthropic::Errors::APIError => e
+        latency_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).round
+        { text: nil, latency_ms: latency_ms, tokens: nil, error: e }
       end
     end
   end

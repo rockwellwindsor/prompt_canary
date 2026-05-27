@@ -47,6 +47,28 @@ RSpec.describe PromptCanary::Adapters::Anthropic do
     end
   end
 
+  describe "error response mapping" do
+    before do
+      allow(messages_resource).to receive(:create)
+        .and_raise(Anthropic::Errors::APIError.new(url: "https://api.anthropic.com", message: "rate limit exceeded"))
+    end
+
+    it "returns nil for text" do
+      result = adapter.call(version: version, args: { user_message: "Hello" })
+      expect(result[:text]).to be_nil
+    end
+
+    it "captures the error" do
+      result = adapter.call(version: version, args: { user_message: "Hello" })
+      expect(result[:error]).to be_a(Anthropic::Errors::APIError)
+    end
+
+    it "still returns latency" do
+      result = adapter.call(version: version, args: { user_message: "Hello" })
+      expect(result[:latency_ms]).to be_a(Integer)
+    end
+  end
+
   describe "request shape" do
     it "calls the Anthropic client with the correct model, system, and messages" do
       allow(messages_resource).to receive(:create).and_return(double(
