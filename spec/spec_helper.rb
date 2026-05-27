@@ -1,5 +1,13 @@
 # frozen_string_literal: true
 
+require "simplecov"
+SimpleCov.start do
+  minimum_coverage 90
+end
+
+require "webmock/rspec"
+WebMock.disable_net_connect!
+
 require "prompt_canary"
 
 RSpec.configure do |config|
