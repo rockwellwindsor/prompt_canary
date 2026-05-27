@@ -37,6 +37,23 @@ RSpec.describe "Prompt.call end-to-end" do
     expect(result.model).to eq("claude-opus-4-7")
   end
 
+  it "returns a Result carrying the error when the adapter fails" do
+    error = StandardError.new("service unavailable")
+    failing_adapter = instance_double(PromptCanary::Adapters::Base).tap do |a|
+      allow(a).to receive(:call).and_return(
+        text: nil,
+        latency_ms: 100,
+        tokens: nil,
+        error: error
+      )
+    end
+
+    result = InvoiceExtractor.call(user_message: "Invoice #123", adapter: failing_adapter)
+
+    expect(result.text).to be_nil
+    expect(result.error).to eq(error)
+  end
+
   it "records telemetry to the injected storage" do
     storage  = PromptCanary::Storage::Memory.new
     recorder = PromptCanary::Recorder.new(storage: storage)
