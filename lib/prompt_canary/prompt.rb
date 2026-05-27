@@ -9,6 +9,7 @@ module PromptCanary
         @_name = name
         @_stable = false
         @_rollout = {}
+        @_rollback_rules = []
       end
 
       def stable(value)
@@ -21,6 +22,10 @@ module PromptCanary
 
       def rollout_to(&block)
         @_predicate = block
+      end
+
+      def rollback_if(metric, greater_than:, over:)
+        @_rollback_rules << { metric: metric, greater_than: greater_than, over: over }
       end
 
       def model(value)
@@ -38,7 +43,8 @@ module PromptCanary
           system: _system,
           rollout: _rollout,
           stable: _stable,
-          predicate: @_predicate
+          predicate: @_predicate,
+          rollback_rules: @_rollback_rules
         )
       end
     end

@@ -11,6 +11,7 @@ require_relative "prompt_canary/adapters/anthropic"
 require_relative "prompt_canary/storage/memory"
 require_relative "prompt_canary/storage/sqlite"
 require_relative "prompt_canary/recorder"
+require_relative "prompt_canary/monitor"
 
 module PromptCanary
   class Error < StandardError; end
@@ -30,6 +31,9 @@ module PromptCanary
 
     def reset_configuration!
       @configuration = nil
+    end
+
+    def demote(prompt_class, version_name)
     end
   end
 end

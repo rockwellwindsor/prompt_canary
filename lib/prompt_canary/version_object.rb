@@ -4,15 +4,16 @@ require "zlib"
 
 module PromptCanary
   class Version
-    attr_reader :name, :model, :system, :rollout
+    attr_reader :name, :model, :system, :rollout, :rollback_rules
 
-    def initialize(name:, model:, system:, rollout:, stable: false, predicate: nil)
+    def initialize(name:, model:, system:, rollout:, stable: false, predicate: nil, rollback_rules: [])
       @name = name
       @model = model
       @system = system
       @rollout = rollout
       @stable = stable
       @predicate = predicate
+      @rollback_rules = rollback_rules
     end
 
     def stable?
