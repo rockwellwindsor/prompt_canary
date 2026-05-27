@@ -39,6 +39,58 @@ RSpec.describe PromptCanary::Monitor do
     end
   end
 
+  context "with multiple rollback rules" do
+    before do
+      stub_const("InvoiceExtractor", Class.new(PromptCanary::Prompt) do
+        version("v1") { stable true; model "claude-opus-4-7"; system "Extract invoice data." }
+        version("v2") do
+          model "claude-opus-4-7"
+          system "Extract invoice data."
+          rollout percent: 50
+          rollback_if :error_rate,  greater_than: 0.05, over: 100
+          rollback_if :latency_p95, greater_than: 2000, over: 100
+        end
+      end)
+    end
+
+    context "when only the latency rule is violated" do
+      before do
+        100.times do
+          storage.write(
+            prompt: "InvoiceExtractor", version: "v2",
+            latency_ms: 3000, tokens: nil, error: nil,
+            recorded_at: Time.now
+          )
+        end
+      end
+
+      it "demotes the version" do
+        allow(PromptCanary).to receive(:demote)
+        PromptCanary::Monitor.new(recorder: recorder).evaluate(InvoiceExtractor)
+        expect(PromptCanary).to have_received(:demote).with(InvoiceExtractor, "v2")
+      end
+    end
+
+    context "when only the error rate rule is violated" do
+      before do
+        100.times do |i|
+          storage.write(
+            prompt: "InvoiceExtractor", version: "v2",
+            latency_ms: 100, tokens: nil,
+            error: i < 10 ? StandardError.new("fail") : nil,
+            recorded_at: Time.now
+          )
+        end
+      end
+
+      it "demotes the version" do
+        allow(PromptCanary).to receive(:demote)
+        PromptCanary::Monitor.new(recorder: recorder).evaluate(InvoiceExtractor)
+        expect(PromptCanary).to have_received(:demote).with(InvoiceExtractor, "v2")
+      end
+    end
+  end
+
   context "when the error rate is below the threshold" do
     before do
       100.times do |i|
