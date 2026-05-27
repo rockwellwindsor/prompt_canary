@@ -40,5 +40,9 @@ module PromptCanary
       roll = Zlib.crc32(key.to_s) % 100
       roll < rollout.fetch(:percent, 0)
     end
+
+    def demote!
+      @rollout = { percent: 0 }
+    end
   end
 end

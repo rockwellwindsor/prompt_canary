@@ -34,6 +34,27 @@ module PromptCanary
     end
 
     def demote(prompt_class, version_name)
+      version = prompt_class.versions.find { |v| v.name == version_name }
+      version&.demote!
+      publish("prompt_canary.demoted", prompt: prompt_class.name, version: version_name)
+    end
+
+    def subscribe(event, &block)
+      subscribers[event] << block
+    end
+
+    def reset_subscribers!
+      @subscribers = nil
+    end
+
+    private
+
+    def publish(event, payload = {})
+      subscribers[event].each { |sub| sub.call(payload) }
+    end
+
+    def subscribers
+      @subscribers ||= Hash.new { |h, k| h[k] = [] }
     end
   end
 end
