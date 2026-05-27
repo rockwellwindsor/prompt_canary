@@ -9,6 +9,7 @@ require_relative "prompt_canary/router"
 require_relative "prompt_canary/adapters/base"
 require_relative "prompt_canary/adapters/anthropic"
 require_relative "prompt_canary/storage/memory"
+require_relative "prompt_canary/storage/sqlite"
 require_relative "prompt_canary/recorder"
 
 module PromptCanary
