@@ -8,8 +8,14 @@ GEM
   specs:
     addressable (2.8.9)
       public_suffix (>= 2.0.2, < 8.0)
+    anthropic (1.43.0)
+      cgi
+      connection_pool
+      standardwebhooks
     ast (2.4.3)
     bigdecimal (4.0.1)
+    cgi (0.5.1)
+    connection_pool (3.0.2)
     crack (1.0.1)
       bigdecimal
       rexml
@@ -90,6 +96,7 @@ GEM
       simplecov_json_formatter (~> 0.1)
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
+    standardwebhooks (1.0.1)
     stringio (3.2.0)
     tsort (0.2.0)
     unicode-display_width (3.2.0)
@@ -105,6 +112,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  anthropic
   irb
   prompt_canary!
   rake (~> 13.0)

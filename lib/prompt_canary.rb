@@ -7,6 +7,7 @@ require_relative "prompt_canary/version_object"
 require_relative "prompt_canary/prompt"
 require_relative "prompt_canary/router"
 require_relative "prompt_canary/adapters/base"
+require_relative "prompt_canary/adapters/anthropic"
 
 module PromptCanary
   class Error < StandardError; end

@@ -12,5 +12,7 @@ gem "rspec", "~> 3.0"
 
 gem "rubocop", "~> 1.21"
 
+gem "anthropic"
+
 gem "webmock", "~> 3.0"
 gem "simplecov", "~> 0.22", require: false
