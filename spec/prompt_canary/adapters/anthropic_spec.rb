@@ -18,6 +18,35 @@ RSpec.describe PromptCanary::Adapters::Anthropic do
     allow(client).to receive(:messages).and_return(messages_resource)
   end
 
+  describe "successful response mapping" do
+    before do
+      allow(messages_resource).to receive(:create).and_return(double(
+        content: [double(text: "extracted data")],
+        usage: double(input_tokens: 412, output_tokens: 89)
+      ))
+    end
+
+    it "returns the response text" do
+      result = adapter.call(version: version, args: { user_message: "Hello" })
+      expect(result[:text]).to eq("extracted data")
+    end
+
+    it "returns token counts" do
+      result = adapter.call(version: version, args: { user_message: "Hello" })
+      expect(result[:tokens]).to eq({ input: 412, output: 89 })
+    end
+
+    it "returns a latency in milliseconds" do
+      result = adapter.call(version: version, args: { user_message: "Hello" })
+      expect(result[:latency_ms]).to be_a(Integer)
+    end
+
+    it "returns nil for error" do
+      result = adapter.call(version: version, args: { user_message: "Hello" })
+      expect(result[:error]).to be_nil
+    end
+  end
+
   describe "request shape" do
     it "calls the Anthropic client with the correct model, system, and messages" do
       allow(messages_resource).to receive(:create).and_return(double(
