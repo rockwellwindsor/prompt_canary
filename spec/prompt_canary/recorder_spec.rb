@@ -16,6 +16,21 @@ RSpec.describe PromptCanary::Recorder do
     }
   end
 
+  describe "#latency_p95" do
+    it "returns the 95th percentile latency over the window" do
+      100.times do |i|
+        recorder.record(
+          prompt: "InvoiceExtractor",
+          version: version,
+          telemetry: telemetry.merge(latency_ms: i + 1)
+        )
+      end
+
+      # 95th percentile of 1..100 is 95
+      expect(recorder.latency_p95(prompt: "InvoiceExtractor", version: "v1", over: 100)).to eq(95)
+    end
+  end
+
   describe "#error_rate" do
     it "returns the proportion of errored calls over the window" do
       93.times { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry) }
