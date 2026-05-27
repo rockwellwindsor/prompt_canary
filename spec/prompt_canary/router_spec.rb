@@ -32,6 +32,21 @@ RSpec.describe PromptCanary::Router do
     end
   end
 
+  describe "with percent: 50 rollout" do
+    let(:prompt_class) do
+      stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
+        version("v1") { stable true; model "m"; system "s" }
+        version("v2") { model "m"; system "s"; rollout percent: 50 }
+      end)
+    end
+
+    it "routes approximately half of calls to the partial version" do
+      results = 1000.times.map { |i| PromptCanary::Router.choose(prompt_class, { call_id: i }).name }
+      partial_count = results.count("v2")
+      expect(partial_count).to be_between(400, 600)
+    end
+  end
+
   describe "with percent: 100 rollout" do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
