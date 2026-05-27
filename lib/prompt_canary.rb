@@ -9,6 +9,7 @@ require_relative "prompt_canary/prompt"
 module PromptCanary
   class Error < StandardError; end
   class ConfigurationError < Error; end
+  class DuplicateVersionError < Error; end
 
   class << self
     def configure

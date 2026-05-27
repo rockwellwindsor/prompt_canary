@@ -15,6 +15,10 @@ module PromptCanary
         @_stable = value
       end
 
+      def rollout(value)
+        @_rollout = value
+      end
+
       def model(value)
         @_model = value
       end
@@ -36,6 +40,10 @@ module PromptCanary
 
     class << self
       def version(name, &block)
+        if versions.any? { |v| v.name == name }
+          raise DuplicateVersionError, "Version #{name.inspect} is already registered on #{self}"
+        end
+
         builder = VersionBuilder.new(name)
         builder.instance_eval(&block)
         versions << builder.build

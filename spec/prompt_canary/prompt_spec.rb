@@ -26,4 +26,32 @@ RSpec.describe PromptCanary::Prompt do
       expect(v.stable?).to be true
     end
   end
+
+  describe "registering multiple versions" do
+    before do
+      stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
+        version("v1") { stable true; model "m"; system "s" }
+        version("v2") { model "m"; system "s"; rollout percent: 10 }
+      end)
+    end
+
+    it "registers both versions" do
+      expect(TestPrompt.versions.length).to eq(2)
+    end
+
+    it "preserves both version names" do
+      expect(TestPrompt.versions.map(&:name)).to eq(%w[v1 v2])
+    end
+  end
+
+  describe "duplicate version names" do
+    it "raises DuplicateVersionError" do
+      expect {
+        stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
+          version("v1") { stable true; model "m"; system "s" }
+          version("v1") { model "m"; system "s" }
+        end)
+      }.to raise_error(PromptCanary::DuplicateVersionError)
+    end
+  end
 end
