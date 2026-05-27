@@ -24,6 +24,8 @@ module PromptCanary
   class << self
     def configure
       yield configuration
+      raise ConfigurationError, "adapter is required" if configuration.adapter.nil?
+      raise ConfigurationError, "storage is required" if configuration.storage.nil?
     end
 
     def configuration
