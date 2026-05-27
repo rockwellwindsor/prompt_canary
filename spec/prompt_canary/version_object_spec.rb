@@ -36,6 +36,23 @@ RSpec.describe PromptCanary::Version do
     end
   end
 
+  describe "#routes?" do
+    it "returns true when the hash of the key falls within the rollout percent" do
+      version = described_class.new(name: "v2", model: "m", system: "s", rollout: { percent: 100 })
+      expect(version.routes?("any-key")).to be true
+    end
+
+    it "returns false when rollout percent is zero" do
+      version = described_class.new(name: "v2", model: "m", system: "s", rollout: { percent: 0 })
+      expect(version.routes?("any-key")).to be false
+    end
+
+    it "returns false when there is no rollout" do
+      version = described_class.new(name: "v1", model: "m", system: "s", rollout: {})
+      expect(version.routes?("any-key")).to be false
+    end
+  end
+
   describe "#stable?" do
     it "is true when initialized with stable: true" do
       version = described_class.new(name: "v1", model: "m", system: "s", rollout: {}, stable: true)

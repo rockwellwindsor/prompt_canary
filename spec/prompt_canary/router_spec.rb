@@ -24,11 +24,16 @@ RSpec.describe PromptCanary::Router do
       end)
     end
 
-    it "always returns the partial version" do
+    it "always returns the partial version when call_id is present" do
       10.times do |i|
         result = PromptCanary::Router.choose(prompt_class, { call_id: i })
         expect(result.name).to eq("v2")
       end
+    end
+
+    it "falls back to stable when no call_id is present" do
+      result = PromptCanary::Router.choose(prompt_class, {})
+      expect(result.name).to eq("v1")
     end
   end
 end
