@@ -12,6 +12,7 @@ require_relative "prompt_canary/storage/memory"
 require_relative "prompt_canary/storage/sqlite"
 require_relative "prompt_canary/recorder"
 require_relative "prompt_canary/monitor"
+require_relative "prompt_canary/cli"
 
 module PromptCanary
   class Error < StandardError; end
@@ -33,10 +34,10 @@ module PromptCanary
       @configuration = nil
     end
 
-    def demote(prompt_class, version_name)
+    def demote(prompt_class, version_name, reason: nil)
       version = prompt_class.versions.find { |v| v.name == version_name }
       version&.demote!
-      publish("prompt_canary.demoted", prompt: prompt_class.name, version: version_name)
+      publish("prompt_canary.demoted", prompt: prompt_class.name, version: version_name, reason: reason)
     end
 
     def subscribe(event, &block)
