@@ -16,6 +16,12 @@ RSpec.describe PromptCanary::CLI do
     }.to output(/Usage:/).to_stderr.and raise_error(SystemExit)
   end
 
+  it "exits with an error message when the prompt class does not exist" do
+    expect {
+      PromptCanary::CLI.new.run(["demote", "NonExistentPrompt", "v1"])
+    }.to output(/Unknown prompt class:/).to_stderr.and raise_error(SystemExit)
+  end
+
   it "demotes the named version with the given reason" do
     allow(PromptCanary).to receive(:demote)
 

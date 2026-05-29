@@ -28,7 +28,12 @@ module PromptCanary
         exit 1
       end
 
-      prompt_class = Object.const_get(prompt_name)
+      prompt_class = begin
+        Object.const_get(prompt_name)
+      rescue NameError
+        warn "Unknown prompt class: #{prompt_name}"
+        exit 1
+      end
       PromptCanary.demote(prompt_class, version_name, reason: options[:reason])
     end
   end
