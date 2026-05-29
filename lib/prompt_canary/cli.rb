@@ -23,6 +23,11 @@ module PromptCanary
       end.parse!(args)
 
       prompt_name, version_name = args
+      if prompt_name.nil? || version_name.nil?
+        warn "Usage: prompt_canary demote PROMPT_CLASS VERSION [--reason REASON]"
+        exit 1
+      end
+
       prompt_class = Object.const_get(prompt_name)
       PromptCanary.demote(prompt_class, version_name, reason: options[:reason])
     end

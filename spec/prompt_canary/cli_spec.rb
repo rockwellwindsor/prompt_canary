@@ -10,6 +10,12 @@ RSpec.describe PromptCanary::CLI do
 
   after { PromptCanary::Prompt.reset_registry! }
 
+  it "exits with a usage message when prompt_name or version_name is missing" do
+    expect {
+      PromptCanary::CLI.new.run(["demote", "SomePrompt"])
+    }.to output(/Usage:/).to_stderr.and raise_error(SystemExit)
+  end
+
   it "demotes the named version with the given reason" do
     allow(PromptCanary).to receive(:demote)
 
