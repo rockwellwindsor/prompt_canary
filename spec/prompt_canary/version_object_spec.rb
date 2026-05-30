@@ -63,6 +63,24 @@ RSpec.describe PromptCanary::Version do
       version = described_class.new(name: "v1", model: "m", system: "static text", rollout: {})
       expect(version.system_for(description: "ignored")).to eq("static text")
     end
+
+    it "calls the block with args when system is a proc" do
+      version = described_class.new(
+        name: "v1", model: "m",
+        system: ->(args) { "Goal: #{args[:goal]}" },
+        rollout: {}
+      )
+      expect(version.system_for(goal: "Run a 5k")).to eq("Goal: Run a 5k")
+    end
+
+    it "passes the full args hash to the block" do
+      version = described_class.new(
+        name: "v1", model: "m",
+        system: ->(args) { args.keys.map(&:to_s).join(",") },
+        rollout: {}
+      )
+      expect(version.system_for(a: 1, b: 2)).to eq("a,b")
+    end
   end
 
   describe "#stable?" do
