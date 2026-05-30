@@ -36,6 +36,12 @@ module PromptCanary
       publish("prompt_canary.demoted", prompt: prompt_class.name, version: version_name, reason: reason)
     end
 
+    def load_prompt_classes(path, loader: method(:require))
+      return unless File.directory?(path)
+
+      Dir[File.join(path, "**", "*.rb")].sort.each { |f| loader.call(f) }
+    end
+
     def check_storage_config!(logger)
       return unless configuration.storage == :sqlite
 
