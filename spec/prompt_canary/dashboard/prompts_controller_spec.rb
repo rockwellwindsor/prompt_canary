@@ -14,7 +14,8 @@ module ActionController
   end
 end unless defined?(ActionController::Base)
 
-require "prompt_canary/dashboard/prompts_controller"
+require_relative "../../../app/controllers/prompt_canary/application_controller"
+require_relative "../../../app/controllers/prompt_canary/dashboard/prompts_controller"
 
 RSpec.describe PromptCanary::Dashboard::PromptsController do
   before do

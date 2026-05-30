@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "application_controller"
-
 module PromptCanary
   module Dashboard
-    class PromptsController < ApplicationController
+    class PromptsController < PromptCanary::ApplicationController
       attr_reader :prompts, :prompt
 
       def index
