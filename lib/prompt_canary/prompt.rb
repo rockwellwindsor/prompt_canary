@@ -24,8 +24,16 @@ module PromptCanary
         @_predicate = block
       end
 
-      def rollback_if(metric, greater_than:, over:)
-        @_rollback_rules << { metric: metric, greater_than: greater_than, over: over }
+      def rollback_if(metric, greater_than: nil, less_than: nil, over:)
+        comparator = if greater_than
+                       :greater_than
+                     elsif less_than
+                       :less_than
+                     else
+                       raise ArgumentError, "rollback_if requires greater_than: or less_than:"
+                     end
+        threshold = greater_than || less_than
+        @_rollback_rules << RollbackRule.new(metric: metric, threshold: threshold, comparator: comparator, window: over)
       end
 
       def model(value)
