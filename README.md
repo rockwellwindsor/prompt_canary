@@ -14,25 +14,51 @@ Or add to your Gemfile:
 gem "prompt_canary"
 ```
 
-## Configuration
+## Rails Setup
 
-Configure once at boot (e.g., `config/initializers/prompt_canary.rb` in Rails):
+Run the install generator:
+
+```bash
+rails generate prompt_canary:install
+```
+
+This creates the `prompt_canary_calls` migration and mounts the engine in `config/routes.rb`. Then run:
+
+```bash
+rails db:migrate
+```
+
+Configure in `config/initializers/prompt_canary.rb`:
+
+```ruby
+PromptCanary.configure do |c|
+  c.adapter = :anthropic      # required
+  c.api_key = ENV["ANTHROPIC_API_KEY"]
+  c.storage = :active_record  # recommended for Rails
+end
+```
+
+## Configuration
 
 ```ruby
 PromptCanary.configure do |c|
   c.adapter = :anthropic  # required
-  c.storage = :sqlite     # required — :sqlite or :memory
+  c.storage = :sqlite     # :sqlite, :active_record, or :memory (tests)
 end
 ```
 
 Both `adapter` and `storage` are required. `ConfigurationError` is raised immediately if either is missing or unknown — not at first call.
 
+Use `:active_record` in Rails apps, `:sqlite` for standalone scripts, and `:memory` in tests.
+
 ## Defining a Prompt
 
-Subclass `PromptCanary::Prompt` and declare versions using the DSL:
+Include `PromptCanary::Promptable` in any class and declare versions using the DSL:
 
 ```ruby
-class InvoiceExtractor < PromptCanary::Prompt
+class InvoiceExtractor
+  include PromptCanary::Promptable
+
   version "v1" do
     stable true
     model  "claude-opus-4-7"
@@ -42,6 +68,8 @@ end
 ```
 
 Exactly one version must be marked `stable`. Declaring zero or two stable versions raises at class load time.
+
+Place prompt classes in `app/prompts/` — the Railtie loads them automatically on boot.
 
 ## Calling a Prompt
 
@@ -56,14 +84,16 @@ result.tokens        # => { input: 50, output: 120 }
 result.error         # => nil (or the exception if the adapter failed)
 ```
 
-`Prompt.call` always returns a `Result` — errors are captured in `result.error`, not raised.
+`call` always returns a `Result` — errors are captured in `result.error`, not raised.
 
 ## Routing Traffic
 
 ### Percentage rollout
 
 ```ruby
-class InvoiceExtractor < PromptCanary::Prompt
+class InvoiceExtractor
+  include PromptCanary::Promptable
+
   version "v1" do
     stable true
     model  "claude-opus-4-7"
@@ -121,7 +151,18 @@ version "v2" do
 end
 ```
 
-Run the monitor from a background job (Sidekiq, cron, etc.):
+### In Rails
+
+`PromptCanary::MonitorJob` is included and ready to queue:
+
+```ruby
+# config/initializers/prompt_canary.rb or a scheduler
+PromptCanary::MonitorJob.set(wait: 5.minutes).perform_later
+```
+
+Schedule it with any background job backend (Sidekiq, GoodJob, Solid Queue, etc.).
+
+### Standalone
 
 ```ruby
 recorder = PromptCanary::Recorder.new(storage: PromptCanary::Storage::SQLite.new)
@@ -129,6 +170,21 @@ PromptCanary::Monitor.new(recorder: recorder).evaluate(InvoiceExtractor)
 ```
 
 When a rule fires, `PromptCanary.demote` is called automatically — the version's rollout is zeroed and a `prompt_canary.demoted` notification is emitted.
+
+## Dashboard
+
+The engine mounts a read-only web dashboard at the path configured in your routes (default `/prompt_canary`):
+
+- **Index** — all registered prompt classes with per-version call counts, error rates, P95 latency, and last-called timestamps
+- **Show** — version breakdown plus the 50 most recent calls with per-call latency, token counts, and error detail
+
+No authentication is wired in by default. Protect the mount point with your app's existing auth if needed:
+
+```ruby
+authenticate :user, ->(u) { u.admin? } do
+  mount PromptCanary::Engine, at: "/prompt_canary"
+end
+```
 
 ## Manual Rollback
 
