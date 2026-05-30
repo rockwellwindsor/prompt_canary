@@ -1,0 +1,44 @@
+<h2>Registered Prompts</h2>
+
+<% if @prompts.empty? %>
+  <p class="muted">No prompts registered. Include <code>PromptCanary::Promptable</code> in a prompt class to see it here.</p>
+<% else %>
+  <table>
+    <thead>
+      <tr>
+        <th>Prompt</th>
+        <th>Version</th>
+        <th>Status</th>
+        <th>Calls</th>
+        <th>Error Rate</th>
+        <th>P95 Latency</th>
+        <th>Last Called</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @prompts.each do |prompt| %>
+        <% prompt[:versions].each_with_index do |v, i| %>
+          <tr>
+            <% if i == 0 %>
+              <td rowspan="<%= prompt[:versions].size %>">
+                <%= link_to prompt[:name], prompt_path(prompt[:name]) %>
+              </td>
+            <% end %>
+            <td class="stat"><%= v[:name] %></td>
+            <td>
+              <span class="badge <%= v[:stable] ? 'badge-stable' : 'badge-candidate' %>">
+                <%= v[:stable] ? "stable" : "candidate" %>
+              </span>
+            </td>
+            <td class="stat"><%= v[:stats][:call_count] %></td>
+            <td class="stat <%= v[:stats][:error_rate].to_f > 0.05 ? 'badge-error' : '' %>">
+              <%= "%.1f%%" % (v[:stats][:error_rate].to_f * 100) %>
+            </td>
+            <td class="stat"><%= v[:stats][:latency_p95] ? "#{v[:stats][:latency_p95]}ms" : "—" %></td>
+            <td class="stat muted"><%= v[:stats][:last_called_at] ? v[:stats][:last_called_at].strftime("%b %d %H:%M") : "—" %></td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

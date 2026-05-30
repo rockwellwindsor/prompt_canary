@@ -1,0 +1,65 @@
+<%= link_to "← All Prompts", root_path, class: "back" %>
+<h2><%= @prompt[:name] %></h2>
+
+<table style="margin-bottom: 24px;">
+  <thead>
+    <tr>
+      <th>Version</th>
+      <th>Status</th>
+      <th>Calls</th>
+      <th>Error Rate</th>
+      <th>P95 Latency</th>
+      <th>Last Called</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @prompt[:versions].each do |v| %>
+      <tr>
+        <td class="stat"><%= v[:name] %></td>
+        <td>
+          <span class="badge <%= v[:stable] ? 'badge-stable' : 'badge-candidate' %>">
+            <%= v[:stable] ? "stable" : "candidate" %>
+          </span>
+        </td>
+        <td class="stat"><%= v[:stats][:call_count] %></td>
+        <td class="stat <%= v[:stats][:error_rate].to_f > 0.05 ? 'badge-error' : '' %>">
+          <%= "%.1f%%" % (v[:stats][:error_rate].to_f * 100) %>
+        </td>
+        <td class="stat"><%= v[:stats][:latency_p95] ? "#{v[:stats][:latency_p95]}ms" : "—" %></td>
+        <td class="stat muted"><%= v[:stats][:last_called_at] ? v[:stats][:last_called_at].strftime("%b %d %H:%M") : "—" %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<h2>Recent Calls</h2>
+<% calls = PromptCanary::Call.where(prompt: @prompt[:name]).order(recorded_at: :desc).limit(50) %>
+<% if calls.empty? %>
+  <p class="muted">No calls recorded yet.</p>
+<% else %>
+  <table>
+    <thead>
+      <tr>
+        <th>Recorded At</th>
+        <th>Version</th>
+        <th>Latency</th>
+        <th>Tokens In</th>
+        <th>Tokens Out</th>
+        <th>Error</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% calls.each do |call| %>
+        <% tokens = call.tokens ? JSON.parse(call.tokens) : nil %>
+        <tr>
+          <td class="stat muted"><%= call.recorded_at.strftime("%b %d %H:%M:%S") %></td>
+          <td class="stat"><%= call.version %></td>
+          <td class="stat"><%= call.latency_ms ? "#{call.latency_ms}ms" : "—" %></td>
+          <td class="stat"><%= tokens ? tokens["input"] : "—" %></td>
+          <td class="stat"><%= tokens ? tokens["output"] : "—" %></td>
+          <td><%= call.error ? %(<span class="badge badge-error">#{call.error}</span>).html_safe : "—" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
