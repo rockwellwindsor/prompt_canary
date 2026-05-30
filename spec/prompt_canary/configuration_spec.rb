@@ -29,4 +29,24 @@ RSpec.describe PromptCanary::Configuration do
       }.to raise_error(PromptCanary::ConfigurationError, /storage/)
     end
   end
+
+  describe "#validate!" do
+    subject(:config) { described_class.new }
+
+    it "does not raise when adapter and storage are both set" do
+      config.adapter = :anthropic
+      config.storage = :memory
+      expect { config.validate! }.not_to raise_error
+    end
+
+    it "raises ConfigurationError when adapter is nil" do
+      config.storage = :memory
+      expect { config.validate! }.to raise_error(PromptCanary::ConfigurationError, /adapter/)
+    end
+
+    it "raises ConfigurationError when storage is nil" do
+      config.adapter = :anthropic
+      expect { config.validate! }.to raise_error(PromptCanary::ConfigurationError, /storage/)
+    end
+  end
 end

@@ -22,5 +22,10 @@ module PromptCanary
 
       @storage = value
     end
+
+    def validate!
+      raise ConfigurationError, "adapter is required" if adapter.nil?
+      raise ConfigurationError, "storage is required" if storage.nil?
+    end
   end
 end
