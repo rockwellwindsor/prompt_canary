@@ -2,6 +2,7 @@
 
 require_relative "prompt_canary/version"
 require_relative "prompt_canary/configuration"
+require_relative "prompt_canary/rollback_rule"
 require_relative "prompt_canary/result"
 require_relative "prompt_canary/version_object"
 require_relative "prompt_canary/prompt"
