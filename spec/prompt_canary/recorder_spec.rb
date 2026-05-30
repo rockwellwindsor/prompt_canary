@@ -47,6 +47,53 @@ RSpec.describe PromptCanary::Recorder do
     end
   end
 
+  describe "#stats" do
+    context "when no records exist" do
+      it "returns zero/nil values" do
+        result = recorder.stats(prompt: "InvoiceExtractor", version: "v1", over: 100)
+        expect(result).to eq(
+          call_count: 0,
+          error_rate: 0.0,
+          latency_p95: nil,
+          last_called_at: nil
+        )
+      end
+    end
+
+    context "with a mix of successful and errored calls" do
+      before do
+        9.times { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry.merge(latency_ms: 200)) }
+        1.times { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry.merge(latency_ms: 500, error: StandardError.new("fail"))) }
+      end
+
+      it "returns the correct call count" do
+        expect(recorder.stats(prompt: "InvoiceExtractor", version: "v1", over: 100)[:call_count]).to eq(10)
+      end
+
+      it "returns the correct error rate" do
+        expect(recorder.stats(prompt: "InvoiceExtractor", version: "v1", over: 100)[:error_rate]).to eq(0.1)
+      end
+
+      it "returns a last_called_at timestamp" do
+        expect(recorder.stats(prompt: "InvoiceExtractor", version: "v1", over: 100)[:last_called_at]).to be_a(Time)
+      end
+    end
+
+    context "latency p95" do
+      it "returns the 95th percentile latency" do
+        100.times do |i|
+          recorder.record(
+            prompt: "InvoiceExtractor",
+            version: version,
+            telemetry: telemetry.merge(latency_ms: i + 1)
+          )
+        end
+
+        expect(recorder.stats(prompt: "InvoiceExtractor", version: "v1", over: 100)[:latency_p95]).to eq(95)
+      end
+    end
+  end
+
   describe "#record" do
     it "writes a record with the expected fields" do
       recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry)
