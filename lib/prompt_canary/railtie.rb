@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "monitor_job"
+
 module PromptCanary
   class Railtie < Rails::Railtie
     initializer "prompt_canary.log_registered_prompts" do
