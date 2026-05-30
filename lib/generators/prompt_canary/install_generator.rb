@@ -14,7 +14,7 @@ module PromptCanary
         Time.now.utc.strftime("%Y%m%d%H%M%S")
       end
 
-      def create_migration
+      def copy_migration
         migration_template(
           "create_prompt_canary_calls.rb",
           "db/migrate/create_prompt_canary_calls.rb"
