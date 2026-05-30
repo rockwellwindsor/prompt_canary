@@ -31,43 +31,12 @@ module PromptCanary
       end
 
       def call(context: {}, adapter: nil, recorder: nil, **args)
-        version   = Router.choose(self, context)
-        adapter  ||= resolve_adapter
-        recorder ||= Recorder.new(storage: resolve_storage)
-
-        telemetry = adapter.call(version: version, args: args)
-        recorder.record(prompt: name, version: version, telemetry: telemetry)
-
-        Result.new(
-          text: telemetry[:text],
-          version_used: version.name,
-          model: version.model,
-          latency_ms: telemetry[:latency_ms],
-          tokens: telemetry[:tokens],
-          error: telemetry[:error],
-          recorded_at: Time.now
-        )
+        PromptExecutor.new(prompt_class: self, adapter: adapter, recorder: recorder)
+                      .call(context: context, **args)
       end
 
       def reset_registry!
         @versions = []
-      end
-
-      private
-
-      def resolve_adapter
-        case PromptCanary.configuration.adapter
-        when :anthropic then Adapters::Anthropic.new
-        else raise ConfigurationError, "No adapter configured"
-        end
-      end
-
-      def resolve_storage
-        case PromptCanary.configuration.storage
-        when :sqlite then Storage::SQLite.new
-        when :memory then Storage::Memory.new
-        else Storage::Memory.new
-        end
       end
     end
   end
