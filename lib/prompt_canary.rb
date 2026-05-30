@@ -75,3 +75,4 @@ require_relative "prompt_canary/prompt_executor"
 require_relative "prompt_canary/recorder"
 require_relative "prompt_canary/monitor"
 require_relative "prompt_canary/cli"
+require_relative "prompt_canary/railtie" if defined?(Rails::Railtie)
