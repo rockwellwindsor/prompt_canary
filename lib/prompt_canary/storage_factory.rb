@@ -3,8 +3,9 @@
 module PromptCanary
   class StorageFactory
     REGISTRY = {
-      memory: -> { Storage::Memory.new },
-      sqlite: -> { Storage::SQLite.new }
+      memory:        -> { Storage::Memory.new },
+      sqlite:        -> { Storage::SQLite.new },
+      active_record: -> { Storage::ActiveRecord.new }
     }.freeze
 
     def self.build(storage_name)

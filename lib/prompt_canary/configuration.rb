@@ -3,7 +3,7 @@
 module PromptCanary
   class Configuration
     VALID_ADAPTERS = %i[anthropic].freeze
-    VALID_STORAGE  = %i[memory sqlite].freeze
+    VALID_STORAGE  = %i[memory sqlite active_record].freeze
 
     attr_reader :adapter, :storage
 

@@ -12,6 +12,10 @@ RSpec.describe PromptCanary::StorageFactory do
       expect(described_class.build(:sqlite)).to be_a(PromptCanary::Storage::SQLite)
     end
 
+    it "returns an ActiveRecord storage for :active_record" do
+      expect(described_class.build(:active_record)).to be_a(PromptCanary::Storage::ActiveRecord)
+    end
+
     it "raises ConfigurationError for an unknown storage" do
       expect { described_class.build(:unknown) }
         .to raise_error(PromptCanary::ConfigurationError, /Unknown storage/)
