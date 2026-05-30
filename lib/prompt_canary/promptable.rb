@@ -4,6 +4,7 @@ module PromptCanary
   module Promptable
     def self.included(base)
       base.extend(ClassMethods)
+      PromptCanary.register_prompt(base)
     end
 
     module ClassMethods
