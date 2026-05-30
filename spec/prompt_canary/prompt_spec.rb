@@ -3,6 +3,14 @@
 RSpec.describe PromptCanary::Prompt do
   after { PromptCanary::Prompt.reset_registry! }
 
+  it "includes Promptable" do
+    expect(PromptCanary::Prompt.ancestors).to include(PromptCanary::Promptable)
+  end
+
+  it "warns when subclassed" do
+    expect { Class.new(PromptCanary::Prompt) }.to output(/deprecated.*Promptable/i).to_stderr
+  end
+
   describe "registering a single version" do
     before do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
