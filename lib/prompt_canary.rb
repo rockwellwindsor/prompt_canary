@@ -36,6 +36,11 @@ module PromptCanary
       publish("prompt_canary.demoted", prompt: prompt_class.name, version: version_name, reason: reason)
     end
 
+    def stats(prompt_class, version_name, over: 100)
+      recorder = Recorder.new(storage: StorageFactory.build(configuration.storage))
+      recorder.stats(prompt: prompt_class.name, version: version_name, over: over)
+    end
+
     def subscribe(event, &block)
       subscribers[event] << block
     end
