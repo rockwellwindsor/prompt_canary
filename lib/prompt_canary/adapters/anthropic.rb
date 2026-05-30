@@ -16,7 +16,7 @@ module PromptCanary
 
         response = @client.messages.create(
           model: version.model,
-          system_: version.system,
+          system_: version.system_for(args),
           max_tokens: DEFAULT_MAX_TOKENS,
           messages: [{ role: "user", content: args[:user_message] }]
         )

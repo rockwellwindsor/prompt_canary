@@ -85,5 +85,27 @@ RSpec.describe PromptCanary::Adapters::Anthropic do
         messages: [{ role: "user", content: "Hello" }]
       )
     end
+
+    it "passes the result of system_for(args) to the Anthropic client when system is a block" do
+      dynamic_version = PromptCanary::Version.new(
+        name: "v1",
+        model: "claude-opus-4-7",
+        system: ->(args) { "Goal: #{args[:goal]}" },
+        rollout: {}
+      )
+      allow(messages_resource).to receive(:create).and_return(double(
+        content: [double(text: "response")],
+        usage: double(input_tokens: 10, output_tokens: 5)
+      ))
+
+      adapter.call(version: dynamic_version, args: { user_message: "Hello", goal: "Run a 5k" })
+
+      expect(messages_resource).to have_received(:create).with(
+        model: "claude-opus-4-7",
+        system_: "Goal: Run a 5k",
+        max_tokens: anything,
+        messages: [{ role: "user", content: "Hello" }]
+      )
+    end
   end
 end
