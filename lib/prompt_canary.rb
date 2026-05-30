@@ -36,6 +36,16 @@ module PromptCanary
       publish("prompt_canary.demoted", prompt: prompt_class.name, version: version_name, reason: reason)
     end
 
+    def check_storage_config!(logger)
+      return unless configuration.storage == :sqlite
+
+      logger.warn(
+        "[PromptCanary] storage: :sqlite is not recommended for multi-process Rails deployments. " \
+        "Run `rails generate prompt_canary:install && rails db:migrate` " \
+        "and set `storage: :active_record`."
+      )
+    end
+
     def stats(prompt_class, version_name, over: 100)
       recorder = Recorder.new(storage: StorageFactory.build(configuration.storage))
       recorder.stats(prompt: prompt_class.name, version: version_name, over: over)

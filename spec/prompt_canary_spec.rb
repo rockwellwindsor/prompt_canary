@@ -10,6 +10,31 @@ RSpec.describe PromptCanary do
 
   after { PromptCanary.reset_configuration! }
 
+  describe ".check_storage_config!" do
+    let(:logger) { instance_double("Logger", warn: nil) }
+
+    it "warns when storage is :sqlite" do
+      PromptCanary.reset_configuration!
+      PromptCanary.configure { |c| c.adapter = :anthropic; c.storage = :sqlite }
+      PromptCanary.check_storage_config!(logger)
+      expect(logger).to have_received(:warn).with(/active_record/)
+    end
+
+    it "does not warn when storage is :active_record" do
+      PromptCanary.reset_configuration!
+      PromptCanary.configure { |c| c.adapter = :anthropic; c.storage = :active_record }
+      PromptCanary.check_storage_config!(logger)
+      expect(logger).not_to have_received(:warn)
+    end
+
+    it "does not warn when storage is :memory" do
+      PromptCanary.reset_configuration!
+      PromptCanary.configure { |c| c.adapter = :anthropic; c.storage = :memory }
+      PromptCanary.check_storage_config!(logger)
+      expect(logger).not_to have_received(:warn)
+    end
+  end
+
   describe ".stats" do
     let(:prompt_class) do
       klass = Class.new { include PromptCanary::Promptable }
