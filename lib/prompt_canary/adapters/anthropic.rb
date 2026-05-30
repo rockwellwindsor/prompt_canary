@@ -5,7 +5,7 @@ require "anthropic"
 module PromptCanary
   module Adapters
     class Anthropic < Base
-      DEFAULT_MAX_TOKENS = 1024
+      DEFAULT_MAX_TOKENS = 4096
 
       def initialize(client: ::Anthropic::Client.new)
         @client = client
@@ -18,7 +18,7 @@ module PromptCanary
           model: version.model,
           system_: version.system_for(args),
           max_tokens: DEFAULT_MAX_TOKENS,
-          messages: [{ role: "user", content: args[:user_message] }]
+          messages: [{ role: "user", content: args.fetch(:user_message, "Generate.") }]
         )
 
         latency_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).round
