@@ -16,6 +16,10 @@ module PromptCanary
       @rollback_rules = rollback_rules
     end
 
+    def system_for(args = {})
+      @system.respond_to?(:call) ? @system.call(args) : @system
+    end
+
     def stable?
       @stable
     end

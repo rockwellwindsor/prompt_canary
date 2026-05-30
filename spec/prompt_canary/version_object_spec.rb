@@ -53,6 +53,18 @@ RSpec.describe PromptCanary::Version do
     end
   end
 
+  describe "#system_for" do
+    it "returns the system string when system is a static string" do
+      version = described_class.new(name: "v1", model: "m", system: "static text", rollout: {})
+      expect(version.system_for({})).to eq("static text")
+    end
+
+    it "ignores args when system is a static string" do
+      version = described_class.new(name: "v1", model: "m", system: "static text", rollout: {})
+      expect(version.system_for(description: "ignored")).to eq("static text")
+    end
+  end
+
   describe "#stable?" do
     it "is true when initialized with stable: true" do
       version = described_class.new(name: "v1", model: "m", system: "s", rollout: {}, stable: true)
