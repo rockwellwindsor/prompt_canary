@@ -32,8 +32,8 @@ module PromptCanary
         @_model = value
       end
 
-      def system(value)
-        @_system = value
+      def system(value = nil, &block)
+        @_system = block || value
       end
 
       def build

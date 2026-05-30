@@ -81,6 +81,19 @@ RSpec.describe PromptCanary::Version do
       )
       expect(version.system_for(a: 1, b: 2)).to eq("a,b")
     end
+
+    it "is set via the VersionBuilder DSL with a block" do
+      stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
+        version("v1") do
+          stable true
+          model  "m"
+          system { |args| "Hello #{args[:name]}" }
+        end
+      end)
+
+      version = TestPrompt.versions.first
+      expect(version.system_for(name: "World")).to eq("Hello World")
+    end
   end
 
   describe "#stable?" do
