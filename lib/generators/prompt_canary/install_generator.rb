@@ -14,6 +14,10 @@ module PromptCanary
         Time.now.utc.strftime("%Y%m%d%H%M%S")
       end
 
+      def mount_engine
+        route 'mount PromptCanary::Engine, at: "/prompt_canary"'
+      end
+
       def copy_migration
         migration_template(
           "create_prompt_canary_calls.rb",
