@@ -14,9 +14,12 @@
   </thead>
   <tbody>
     <% @prompt[:versions].each do |v| %>
-      <tr>
+      <tr class="<%= v[:active] ? '' : 'inactive' %>">
         <td class="stat"><%= v[:name] %></td>
         <td>
+          <% if v[:active] %>
+            <span class="badge badge-active">active</span>
+          <% end %>
           <span class="badge <%= v[:stable] ? 'badge-stable' : 'badge-candidate' %>">
             <%= v[:stable] ? "stable" : "candidate" %>
           </span>

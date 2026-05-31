@@ -48,6 +48,29 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
 
       expect(controller.prompts.first[:versions].first[:demoted]).to eq(false)
     end
+
+    it "includes active: true for a stable version" do
+      klass = Class.new { include PromptCanary::Promptable }
+      allow(klass).to receive(:name).and_return("TestPrompt")
+      klass.version("v1") { stable true; model "claude-opus-4-7" }
+
+      controller.index
+
+      expect(controller.prompts.first[:versions].first[:active]).to eq(true)
+    end
+
+    it "includes active: false for a candidate version with zero rollout" do
+      klass = Class.new { include PromptCanary::Promptable }
+      allow(klass).to receive(:name).and_return("TestPrompt")
+      klass.version("v1") { stable true; model "claude-opus-4-7"; system "s" }
+      klass.version("v2") { model "claude-opus-4-7"; system "s v2"; rollout percent: 0 }
+
+      controller.index
+
+      v2 = controller.prompts.first[:versions].find { |v| v[:name] == "v2" }
+      expect(v2[:active]).to eq(false)
+    end
+
   end
 
   describe "#show" do

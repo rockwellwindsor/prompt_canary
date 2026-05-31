@@ -18,7 +18,7 @@
     <tbody>
       <% @prompts.each do |prompt| %>
         <% prompt[:versions].each_with_index do |v, i| %>
-          <tr>
+          <tr class="<%= v[:active] ? '' : 'inactive' %>">
             <% if i == 0 %>
               <td rowspan="<%= prompt[:versions].size %>">
                 <%= link_to prompt[:name], prompt_path(prompt[:name]) %>
@@ -26,6 +26,9 @@
             <% end %>
             <td class="stat"><%= v[:name] %></td>
             <td>
+              <% if v[:active] %>
+                <span class="badge badge-active">active</span>
+              <% end %>
               <span class="badge <%= v[:stable] ? 'badge-stable' : 'badge-candidate' %>">
                 <%= v[:stable] ? "stable" : "candidate" %>
               </span>
