@@ -34,6 +34,12 @@ This creates the `prompt_canary_calls` migration and mounts the engine in `confi
 rails db:migrate
 ```
 
+Add the adapter gem to your Gemfile — PromptCanary does not pull it in automatically:
+
+```ruby
+gem "anthropic"  # required when using adapter: :anthropic
+```
+
 Configure in `config/initializers/prompt_canary.rb`:
 
 ```ruby
