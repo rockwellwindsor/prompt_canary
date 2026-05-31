@@ -1,5 +1,37 @@
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-30
+
+### Added
+
+- `PromptCanary::Promptable` module — compose prompt behavior via `include` without consuming the host class's superclass slot
+- `PromptCanary::AdapterFactory` and `StorageFactory` — registry pattern replacing case statements; raises `ConfigurationError` immediately for unknown values
+- `PromptCanary::PromptExecutor` — extracts router → adapter → recorder → result orchestration out of `Promptable#call`
+- `Configuration#validate!` — centralizes configuration validation; called at end of `configure` block
+- Dynamic system prompts — `system` DSL field accepts a block receiving call-time args, enabling runtime data in prompt text
+- `RollbackRule` value object — replaces plain hashes; owns comparison logic via `violated_by?`
+- `Recorder#stats` — returns `{ call_count:, error_rate:, latency_p95:, last_called_at: }` over a configurable window
+- `PromptCanary.stats` — convenience method for Rails console access; no setup required
+- `PromptCanary.register_prompt` / `registered_prompts` — prompt class registry populated automatically when `Promptable` is included
+- `PromptCanary::Railtie` — loads prompt classes from `app/prompts/` at boot; warns when `:sqlite` is configured in a Rails context
+- `PromptCanary::MonitorJob` — `ActiveJob::Base` subclass that iterates registered prompts and runs the monitor; host app only schedules it
+- `Storage::ActiveRecord` — AR-backed storage using the host app's existing database connection and migration system
+- `PromptCanary::RolloutOverride` — AR model persisting demotions to `prompt_canary_rollout_overrides`; survives restarts and redeploys
+- `PromptCanary.restore` — clears a demotion override and emits `prompt_canary.restored`; router immediately resumes class-defined rollout
+- `rails generate prompt_canary:install` — creates both `prompt_canary_calls` and `prompt_canary_rollout_overrides` migrations and mounts the engine
+- `PromptCanary::Engine` — mountable Rails engine with read-only dashboard; index shows per-version stats with demoted badge; show displays recent calls
+- Router reads `prompt_canary_rollout_overrides` on every request when AR is available — demoted versions receive zero traffic without a redeploy
+
+### Changed
+
+- `PromptCanary::Prompt` is deprecated — `include PromptCanary::Promptable` is the correct pattern; `Prompt` emits a deprecation warning from `inherited`
+- `PromptCanary.demote` writes a `RolloutOverride` record when using AR storage instead of mutating in-memory version state — class-defined rollout is preserved so restore requires no knowledge of the original value
+- Adapter gems (`anthropic`, etc.) are the caller's dependency — not declared in gemspec to avoid forcing unused adapters on callers using custom implementations
+
+### Fixed
+
+- `frozen_string_literal` consistency across all files
+
 ## [0.1.0] - 2026-05-27
 
 ### Added

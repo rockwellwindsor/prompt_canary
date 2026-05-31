@@ -212,13 +212,27 @@ Or from Ruby:
 PromptCanary.demote(InvoiceExtractor, "v2", reason: "error rate spike")
 ```
 
+When using `storage: :active_record`, demotion writes to `prompt_canary_rollout_overrides` — the override survives restarts and redeploys. The router reads it on every request and routes all traffic to the stable version until the override is cleared.
+
+To restore a version to its class-defined rollout:
+
+```ruby
+PromptCanary.restore(InvoiceExtractor, "v2")
+```
+
+The dashboard marks demoted versions with a red badge so the current override state is visible at a glance.
+
 ## Notifications
 
-Subscribe to demotion events:
+Subscribe to demotion and restoration events:
 
 ```ruby
 PromptCanary.subscribe("prompt_canary.demoted") do |payload|
   puts "#{payload[:prompt]} #{payload[:version]} demoted — #{payload[:reason]}"
+end
+
+PromptCanary.subscribe("prompt_canary.restored") do |payload|
+  puts "#{payload[:prompt]} #{payload[:version]} restored"
 end
 ```
 

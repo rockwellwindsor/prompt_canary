@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    prompt_canary (0.1.0)
+    prompt_canary (0.2.0)
       sqlite3 (~> 2.0)
 
 GEM
