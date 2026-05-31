@@ -6,7 +6,11 @@ RSpec.describe PromptCanary::Monitor do
 
   before do
     stub_const("InvoiceExtractor", Class.new(PromptCanary::Prompt) do
-      version("v1") { stable true; model "claude-opus-4-7"; system "Extract invoice data." }
+      version("v1") do
+        stable true
+        model "claude-opus-4-7"
+        system "Extract invoice data."
+      end
       version("v2") do
         model "claude-opus-4-7"
         system "Extract invoice data."
@@ -42,7 +46,11 @@ RSpec.describe PromptCanary::Monitor do
   context "with multiple rollback rules" do
     before do
       stub_const("InvoiceExtractor", Class.new(PromptCanary::Prompt) do
-        version("v1") { stable true; model "claude-opus-4-7"; system "Extract invoice data." }
+        version("v1") do
+          stable true
+          model "claude-opus-4-7"
+          system "Extract invoice data."
+        end
         version("v2") do
           model "claude-opus-4-7"
           system "Extract invoice data."

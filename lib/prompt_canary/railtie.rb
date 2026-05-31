@@ -4,7 +4,7 @@ require_relative "monitor_job"
 
 module PromptCanary
   class Railtie < Rails::Railtie
-    initializer "prompt_canary.load_prompt_classes" do |app|
+    initializer "prompt_canary.load_prompt_classes" do |_app|
       ActiveSupport.on_load(:after_initialize) do
         PromptCanary.load_prompt_classes(Rails.root.join("app", "prompts").to_s)
       end

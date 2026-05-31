@@ -3,7 +3,7 @@
 module PromptCanary
   class Router
     def self.choose(prompt_class, context)
-      partial = prompt_class.versions.find { |v| v.partial_rollout? || v.has_predicate? }
+      partial = prompt_class.versions.find { |v| v.partial_rollout? || v.predicate? }
       return prompt_class.stable_version unless partial
       return prompt_class.stable_version if demoted?(prompt_class.name, partial.name)
 

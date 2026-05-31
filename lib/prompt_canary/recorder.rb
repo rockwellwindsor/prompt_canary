@@ -34,9 +34,9 @@ module PromptCanary
       p95_index   = (latencies.size * 0.95).ceil - 1
 
       {
-        call_count:     records.size,
-        error_rate:     (error_count.to_f / records.size).round(2),
-        latency_p95:    latencies[p95_index],
+        call_count: records.size,
+        error_rate: (error_count.to_f / records.size).round(2),
+        latency_p95: latencies[p95_index],
         last_called_at: records.last[:recorded_at]
       }
     end

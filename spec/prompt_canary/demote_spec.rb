@@ -3,7 +3,11 @@
 RSpec.describe "PromptCanary.demote" do
   before do
     stub_const("InvoiceExtractor", Class.new(PromptCanary::Prompt) do
-      version("v1") { stable true; model "claude-opus-4-7"; system "Extract invoice data." }
+      version("v1") do
+        stable true
+        model "claude-opus-4-7"
+        system "Extract invoice data."
+      end
       version("v2") do
         model "claude-opus-4-7"
         system "Extract invoice data."
@@ -54,7 +58,10 @@ RSpec.describe "PromptCanary.demote" do
     end
 
     before do
-      PromptCanary.configure { |c| c.adapter = :anthropic; c.storage = :active_record }
+      PromptCanary.configure do |c|
+        c.adapter = :anthropic
+        c.storage = :active_record
+      end
     end
 
     around do |example|

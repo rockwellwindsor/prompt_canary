@@ -21,9 +21,9 @@ RSpec.describe PromptCanary::Adapters::Anthropic do
   describe "successful response mapping" do
     before do
       allow(messages_resource).to receive(:create).and_return(double(
-        content: [double(text: "extracted data")],
-        usage: double(input_tokens: 412, output_tokens: 89)
-      ))
+                                                                content: [double(text: "extracted data")],
+                                                                usage: double(input_tokens: 412, output_tokens: 89)
+                                                              ))
     end
 
     it "returns the response text" do
@@ -72,9 +72,9 @@ RSpec.describe PromptCanary::Adapters::Anthropic do
   describe "request shape" do
     it "calls the Anthropic client with the correct model, system, and messages" do
       allow(messages_resource).to receive(:create).and_return(double(
-        content: [double(text: "response text")],
-        usage: double(input_tokens: 10, output_tokens: 5)
-      ))
+                                                                content: [double(text: "response text")],
+                                                                usage: double(input_tokens: 10, output_tokens: 5)
+                                                              ))
 
       adapter.call(version: version, args: { user_message: "Hello" })
 
@@ -94,9 +94,9 @@ RSpec.describe PromptCanary::Adapters::Anthropic do
         rollout: {}
       )
       allow(messages_resource).to receive(:create).and_return(double(
-        content: [double(text: "response")],
-        usage: double(input_tokens: 10, output_tokens: 5)
-      ))
+                                                                content: [double(text: "response")],
+                                                                usage: double(input_tokens: 10, output_tokens: 5)
+                                                              ))
 
       adapter.call(version: dynamic_version, args: { user_message: "Hello", goal: "Run a 5k" })
 

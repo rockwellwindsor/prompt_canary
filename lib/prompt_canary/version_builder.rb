@@ -23,7 +23,7 @@ module PromptCanary
       @_predicate = block
     end
 
-    def rollback_if(metric, greater_than: nil, less_than: nil, over:)
+    def rollback_if(metric, over:, greater_than: nil, less_than: nil)
       comparator = if greater_than
                      :greater_than
                    elsif less_than

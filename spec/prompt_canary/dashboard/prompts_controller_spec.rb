@@ -2,24 +2,29 @@
 
 require "spec_helper"
 
-module ActionController
-  class Base
-    def self.before_action(*); end
+unless defined?(ActionController::Base)
+  module ActionController
+    class Base
+      def self.before_action(*); end
 
-    def params
-      @params ||= {}
+      def params
+        @params ||= {}
+      end
+
+      def render(**); end
     end
-
-    def render(**); end
   end
-end unless defined?(ActionController::Base)
+end
 
 require_relative "../../../app/controllers/prompt_canary/application_controller"
 require_relative "../../../app/controllers/prompt_canary/dashboard/prompts_controller"
 
 RSpec.describe PromptCanary::Dashboard::PromptsController do
   before do
-    PromptCanary.configure { |c| c.adapter = :anthropic; c.storage = :memory }
+    PromptCanary.configure do |c|
+      c.adapter = :anthropic
+      c.storage = :memory
+    end
   end
 
   after { PromptCanary.reset_configuration! }
@@ -30,7 +35,10 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
     it "assembles a list of registered prompts with stats" do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
-      klass.version("v1") { stable true; model "claude-opus-4-7" }
+      klass.version("v1") do
+        stable true
+        model "claude-opus-4-7"
+      end
 
       controller.index
 
@@ -42,7 +50,10 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
     it "includes demoted: false for each version when no overrides are active" do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
-      klass.version("v1") { stable true; model "claude-opus-4-7" }
+      klass.version("v1") do
+        stable true
+        model "claude-opus-4-7"
+      end
 
       controller.index
 
@@ -52,7 +63,10 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
     it "includes active: true for a stable version" do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
-      klass.version("v1") { stable true; model "claude-opus-4-7" }
+      klass.version("v1") do
+        stable true
+        model "claude-opus-4-7"
+      end
 
       controller.index
 
@@ -62,22 +76,32 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
     it "includes active: false for a candidate version with zero rollout" do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
-      klass.version("v1") { stable true; model "claude-opus-4-7"; system "s" }
-      klass.version("v2") { model "claude-opus-4-7"; system "s v2"; rollout percent: 0 }
+      klass.version("v1") do
+        stable true
+        model "claude-opus-4-7"
+        system "s"
+      end
+      klass.version("v2") do
+        model "claude-opus-4-7"
+        system "s v2"
+        rollout percent: 0
+      end
 
       controller.index
 
       v2 = controller.prompts.first[:versions].find { |v| v[:name] == "v2" }
       expect(v2[:active]).to eq(false)
     end
-
   end
 
   describe "#show" do
     it "finds the prompt by name and assembles version stats" do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
-      klass.version("v1") { stable true; model "claude-opus-4-7" }
+      klass.version("v1") do
+        stable true
+        model "claude-opus-4-7"
+      end
 
       controller.instance_variable_set(:@params, { name: "TestPrompt" })
       controller.show
@@ -89,7 +113,10 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
     it "includes demoted: false for each version when no overrides are active" do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
-      klass.version("v1") { stable true; model "claude-opus-4-7" }
+      klass.version("v1") do
+        stable true
+        model "claude-opus-4-7"
+      end
 
       controller.instance_variable_set(:@params, { name: "TestPrompt" })
       controller.show

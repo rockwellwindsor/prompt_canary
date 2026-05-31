@@ -34,14 +34,18 @@ RSpec.describe PromptCanary::Recorder do
   describe "#error_rate" do
     it "returns the proportion of errored calls over the window" do
       93.times { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry) }
-      7.times  { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry.merge(error: StandardError.new)) }
+      7.times  do
+        recorder.record(prompt: "InvoiceExtractor", version: version,
+                        telemetry: telemetry.merge(error: StandardError.new))
+      end
 
       expect(recorder.error_rate(prompt: "InvoiceExtractor", version: "v1", over: 100)).to eq(0.07)
     end
 
     it "calculates rate over available records when fewer than the window" do
       2.times { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry) }
-      1.times  { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry.merge(error: StandardError.new)) }
+      recorder.record(prompt: "InvoiceExtractor", version: version,
+                      telemetry: telemetry.merge(error: StandardError.new))
 
       expect(recorder.error_rate(prompt: "InvoiceExtractor", version: "v1", over: 100)).to eq(0.33)
     end
@@ -62,8 +66,11 @@ RSpec.describe PromptCanary::Recorder do
 
     context "with a mix of successful and errored calls" do
       before do
-        9.times { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry.merge(latency_ms: 200)) }
-        1.times { recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry.merge(latency_ms: 500, error: StandardError.new("fail"))) }
+        9.times do
+          recorder.record(prompt: "InvoiceExtractor", version: version, telemetry: telemetry.merge(latency_ms: 200))
+        end
+        recorder.record(prompt: "InvoiceExtractor", version: version,
+                        telemetry: telemetry.merge(latency_ms: 500, error: StandardError.new("fail")))
       end
 
       it "returns the correct call count" do

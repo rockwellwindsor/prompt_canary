@@ -9,7 +9,9 @@ Gem::Specification.new do |spec|
   spec.email = ["rockwellwindsor@gmail.com"]
 
   spec.summary = "Canary deploys and automatic rollback for LLM prompts in Ruby."
-  spec.description = "Declare prompts as Ruby classes with versioned configurations, route traffic by percentage or predicate, record telemetry, and automatically roll back misbehaving versions."
+  spec.description = "Declare prompts as Ruby classes with versioned configurations, route traffic " \
+                     "by percentage or predicate, record telemetry, and automatically roll back " \
+                     "misbehaving versions."
   spec.homepage = "https://github.com/rockwellwindsor/prompt_canary"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

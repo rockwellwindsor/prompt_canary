@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreatePromptCanaryTables < ActiveRecord::Migration[7.2]
   def change
     create_table :prompt_canary_calls do |t|

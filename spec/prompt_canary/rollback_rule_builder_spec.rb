@@ -2,9 +2,15 @@
 
 RSpec.describe "rollback_if DSL" do
   it "builds a RollbackRule for greater_than" do
-    stub_const("TestPrompt", Class.new { include PromptCanary::Promptable
-      version("v1") { stable true; model "m"; system "s"; rollback_if :error_rate, greater_than: 0.05, over: 100 }
-    })
+    stub_const("TestPrompt", Class.new do
+      include PromptCanary::Promptable
+      version("v1") do
+        stable true
+        model "m"
+        system "s"
+        rollback_if :error_rate, greater_than: 0.05, over: 100
+      end
+    end)
 
     rule = TestPrompt.versions.first.rollback_rules.first
     expect(rule).to be_a(PromptCanary::RollbackRule)
@@ -15,9 +21,15 @@ RSpec.describe "rollback_if DSL" do
   end
 
   it "builds a RollbackRule for less_than" do
-    stub_const("TestPrompt", Class.new { include PromptCanary::Promptable
-      version("v1") { stable true; model "m"; system "s"; rollback_if :eval_score, less_than: 0.75, over: 50 }
-    })
+    stub_const("TestPrompt", Class.new do
+      include PromptCanary::Promptable
+      version("v1") do
+        stable true
+        model "m"
+        system "s"
+        rollback_if :eval_score, less_than: 0.75, over: 50
+      end
+    end)
 
     rule = TestPrompt.versions.first.rollback_rules.first
     expect(rule.comparator).to eq(:less_than)
@@ -25,10 +37,16 @@ RSpec.describe "rollback_if DSL" do
   end
 
   it "raises ArgumentError when neither greater_than nor less_than is given" do
-    expect {
-      stub_const("TestPrompt", Class.new { include PromptCanary::Promptable
-        version("v1") { stable true; model "m"; system "s"; rollback_if :error_rate, over: 100 }
-      })
-    }.to raise_error(ArgumentError, /greater_than.*less_than/i)
+    expect do
+      stub_const("TestPrompt", Class.new do
+        include PromptCanary::Promptable
+        version("v1") do
+          stable true
+          model "m"
+          system "s"
+          rollback_if :error_rate, over: 100
+        end
+      end)
+    end.to raise_error(ArgumentError, /greater_than.*less_than/i)
   end
 end

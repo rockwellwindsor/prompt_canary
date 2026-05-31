@@ -5,7 +5,11 @@ RSpec.describe PromptCanary::Router do
 
   let(:prompt_class) do
     stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
-      version("v1") { stable true; model "m"; system "s" }
+      version("v1") do
+        stable true
+        model "m"
+        system "s"
+      end
     end)
   end
 
@@ -19,7 +23,11 @@ RSpec.describe PromptCanary::Router do
   describe "with a rollout_to predicate" do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
-        version("v1") { stable true; model "m"; system "s" }
+        version("v1") do
+          stable true
+          model "m"
+          system "s"
+        end
         version("v2") do
           model "m"
           system "s"
@@ -48,8 +56,16 @@ RSpec.describe PromptCanary::Router do
   describe "with percent: 0 rollout" do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
-        version("v1") { stable true; model "m"; system "s" }
-        version("v2") { model "m"; system "s"; rollout percent: 0 }
+        version("v1") do
+          stable true
+          model "m"
+          system "s"
+        end
+        version("v2") do
+          model "m"
+          system "s"
+          rollout percent: 0
+        end
       end)
     end
 
@@ -64,8 +80,16 @@ RSpec.describe PromptCanary::Router do
   describe "with percent: 50 rollout" do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
-        version("v1") { stable true; model "m"; system "s" }
-        version("v2") { model "m"; system "s"; rollout percent: 50 }
+        version("v1") do
+          stable true
+          model "m"
+          system "s"
+        end
+        version("v2") do
+          model "m"
+          system "s"
+          rollout percent: 50
+        end
       end)
     end
 
@@ -79,8 +103,16 @@ RSpec.describe PromptCanary::Router do
   describe "with percent: 100 rollout" do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
-        version("v1") { stable true; model "m"; system "s" }
-        version("v2") { model "m"; system "s"; rollout percent: 100 }
+        version("v1") do
+          stable true
+          model "m"
+          system "s"
+        end
+        version("v2") do
+          model "m"
+          system "s"
+          rollout percent: 100
+        end
       end)
     end
 
@@ -104,26 +136,46 @@ RSpec.describe PromptCanary::Router do
 
       ::ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
       conn = ::ActiveRecord::Base.connection
-      conn.create_table(:prompt_canary_calls) do |t|
-        t.string :prompt, null: false; t.string :version, null: false
-        t.integer :latency_ms; t.text :tokens; t.text :error
-        t.datetime :recorded_at, null: false
-      end unless conn.table_exists?(:prompt_canary_calls)
-      conn.create_table(:prompt_canary_rollout_overrides) do |t|
-        t.string :prompt, null: false; t.string :version, null: false
-        t.integer :rollout_override, null: false; t.datetime :created_at, null: false
-      end unless conn.table_exists?(:prompt_canary_rollout_overrides)
+      unless conn.table_exists?(:prompt_canary_calls)
+        conn.create_table(:prompt_canary_calls) do |t|
+          t.string :prompt, null: false
+          t.string :version, null: false
+          t.integer :latency_ms
+          t.text :tokens
+          t.text :error
+          t.datetime :recorded_at, null: false
+        end
+      end
+      unless conn.table_exists?(:prompt_canary_rollout_overrides)
+        conn.create_table(:prompt_canary_rollout_overrides) do |t|
+          t.string :prompt, null: false
+          t.string :version, null: false
+          t.integer :rollout_override, null: false
+          t.datetime :created_at, null: false
+        end
+      end
     end
 
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
-        version("v1") { stable true; model "m"; system "s" }
-        version("v2") { model "m"; system "s"; rollout percent: 100 }
+        version("v1") do
+          stable true
+          model "m"
+          system "s"
+        end
+        version("v2") do
+          model "m"
+          system "s"
+          rollout percent: 100
+        end
       end)
     end
 
     around do |example|
-      ::ActiveRecord::Base.transaction { example.run; raise ::ActiveRecord::Rollback }
+      ::ActiveRecord::Base.transaction do
+        example.run
+        raise ::ActiveRecord::Rollback
+      end
     end
 
     it "routes all traffic to stable when a zero override exists for the candidate" do

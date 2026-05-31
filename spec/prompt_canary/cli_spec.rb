@@ -3,23 +3,31 @@
 RSpec.describe PromptCanary::CLI do
   before do
     stub_const("SomePrompt", Class.new(PromptCanary::Prompt) do
-      version("v1") { stable true; model "claude-opus-4-7"; system "Extract." }
-      version("v2") { model "claude-opus-4-7"; system "Extract."; rollout percent: 50 }
+      version("v1") do
+        stable true
+        model "claude-opus-4-7"
+        system "Extract."
+      end
+      version("v2") do
+        model "claude-opus-4-7"
+        system "Extract."
+        rollout percent: 50
+      end
     end)
   end
 
   after { PromptCanary::Prompt.reset_registry! }
 
   it "exits with a usage message when prompt_name or version_name is missing" do
-    expect {
-      PromptCanary::CLI.new.run(["demote", "SomePrompt"])
-    }.to output(/Usage:/).to_stderr.and raise_error(SystemExit)
+    expect do
+      PromptCanary::CLI.new.run(%w[demote SomePrompt])
+    end.to output(/Usage:/).to_stderr.and raise_error(SystemExit)
   end
 
   it "exits with an error message when the prompt class does not exist" do
-    expect {
-      PromptCanary::CLI.new.run(["demote", "NonExistentPrompt", "v1"])
-    }.to output(/Unknown prompt class:/).to_stderr.and raise_error(SystemExit)
+    expect do
+      PromptCanary::CLI.new.run(%w[demote NonExistentPrompt v1])
+    end.to output(/Unknown prompt class:/).to_stderr.and raise_error(SystemExit)
   end
 
   it "demotes the named version with the given reason" do

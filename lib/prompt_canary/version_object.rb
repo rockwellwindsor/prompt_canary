@@ -24,7 +24,7 @@ module PromptCanary
       @stable
     end
 
-    def has_predicate?
+    def predicate?
       !@predicate.nil?
     end
 
@@ -37,7 +37,7 @@ module PromptCanary
     end
 
     def partial_rollout?
-      rollout.fetch(:percent, 0) > 0
+      rollout.fetch(:percent, 0).positive?
     end
 
     def routes?(key)

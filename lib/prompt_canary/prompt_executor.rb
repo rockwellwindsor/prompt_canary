@@ -14,13 +14,13 @@ module PromptCanary
       @recorder.record(prompt: @prompt_class.name, version: version, telemetry: telemetry)
 
       Result.new(
-        text:         telemetry[:text],
+        text: telemetry[:text],
         version_used: version.name,
-        model:        version.model,
-        latency_ms:   telemetry[:latency_ms],
-        tokens:       telemetry[:tokens],
-        error:        telemetry[:error],
-        recorded_at:  Time.now
+        model: version.model,
+        latency_ms: telemetry[:latency_ms],
+        tokens: telemetry[:tokens],
+        error: telemetry[:error],
+        recorded_at: Time.now
       )
     end
   end

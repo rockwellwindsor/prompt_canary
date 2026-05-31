@@ -36,21 +36,30 @@ RSpec.describe PromptCanary do
 
     it "warns when storage is :sqlite" do
       PromptCanary.reset_configuration!
-      PromptCanary.configure { |c| c.adapter = :anthropic; c.storage = :sqlite }
+      PromptCanary.configure do |c|
+        c.adapter = :anthropic
+        c.storage = :sqlite
+      end
       PromptCanary.check_storage_config!(logger)
       expect(logger).to have_received(:warn).with(/active_record/)
     end
 
     it "does not warn when storage is :active_record" do
       PromptCanary.reset_configuration!
-      PromptCanary.configure { |c| c.adapter = :anthropic; c.storage = :active_record }
+      PromptCanary.configure do |c|
+        c.adapter = :anthropic
+        c.storage = :active_record
+      end
       PromptCanary.check_storage_config!(logger)
       expect(logger).not_to have_received(:warn)
     end
 
     it "does not warn when storage is :memory" do
       PromptCanary.reset_configuration!
-      PromptCanary.configure { |c| c.adapter = :anthropic; c.storage = :memory }
+      PromptCanary.configure do |c|
+        c.adapter = :anthropic
+        c.storage = :memory
+      end
       PromptCanary.check_storage_config!(logger)
       expect(logger).not_to have_received(:warn)
     end

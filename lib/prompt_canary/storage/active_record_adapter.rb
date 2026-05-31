@@ -16,11 +16,11 @@ module PromptCanary
     class ActiveRecord
       def write(record)
         Call.create!(
-          prompt:      record[:prompt],
-          version:     record[:version],
-          latency_ms:  record[:latency_ms],
-          tokens:      record[:tokens]&.to_json,
-          error:       record[:error]&.message,
+          prompt: record[:prompt],
+          version: record[:version],
+          latency_ms: record[:latency_ms],
+          tokens: record[:tokens]&.to_json,
+          error: record[:error]&.message,
           recorded_at: record[:recorded_at]
         )
       end
@@ -37,11 +37,11 @@ module PromptCanary
 
       def deserialize(row)
         {
-          prompt:      row.prompt,
-          version:     row.version,
-          latency_ms:  row.latency_ms,
-          tokens:      row.tokens ? JSON.parse(row.tokens, symbolize_names: true) : nil,
-          error:       row.error ? StandardError.new(row.error) : nil,
+          prompt: row.prompt,
+          version: row.version,
+          latency_ms: row.latency_ms,
+          tokens: row.tokens ? JSON.parse(row.tokens, symbolize_names: true) : nil,
+          error: row.error ? StandardError.new(row.error) : nil,
           recorded_at: row.recorded_at
         }
       end

@@ -8,6 +8,7 @@ module PromptCanary
       DEFAULT_MAX_TOKENS = 4096
 
       def initialize(client: ::Anthropic::Client.new)
+        super()
         @client = client
       end
 

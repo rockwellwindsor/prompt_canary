@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 PromptCanary::Engine.routes.draw do
   root to: "dashboard/prompts#index"
   scope module: :dashboard do

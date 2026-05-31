@@ -3,15 +3,19 @@
 require "spec_helper"
 
 module Rails
-  class Railtie
-    def self.initializer(name, **opts, &block); end
-  end unless defined?(Railtie)
-
-  class Engine < Railtie
-    def self.isolate_namespace(mod)
-      @isolated = true
+  unless defined?(Railtie)
+    class Railtie
+      def self.initializer(name, **opts, &block); end
     end
-  end unless defined?(Engine)
+  end
+
+  unless defined?(Engine)
+    class Engine < Railtie
+      def self.isolate_namespace(_mod)
+        @isolated = true
+      end
+    end
+  end
 end
 
 require "prompt_canary/engine"

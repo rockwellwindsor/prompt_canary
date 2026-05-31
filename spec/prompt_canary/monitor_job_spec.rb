@@ -46,7 +46,10 @@ RSpec.describe PromptCanary::MonitorJob do
 
     it "does nothing when no prompts are registered" do
       PromptCanary.reset_configuration!
-      PromptCanary.configure { |c| c.adapter = :anthropic; c.storage = :memory }
+      PromptCanary.configure do |c|
+        c.adapter = :anthropic
+        c.storage = :memory
+      end
 
       described_class.new.perform
 
