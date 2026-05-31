@@ -125,6 +125,7 @@ GEM
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
     sqlite3 (2.8.0-arm64-darwin)
+    sqlite3 (2.8.0-x86_64-linux-gnu)
     standardwebhooks (1.0.1)
     stringio (3.2.0)
     timeout (0.6.1)
@@ -141,6 +142,7 @@ GEM
 
 PLATFORMS
   arm64-darwin-24
+  x86_64-linux
 
 DEPENDENCIES
   activerecord (~> 7.0)
