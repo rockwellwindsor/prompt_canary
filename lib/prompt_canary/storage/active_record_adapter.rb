@@ -8,6 +8,10 @@ module PromptCanary
     self.table_name = "prompt_canary_calls"
   end
 
+  class RolloutOverride < ::ActiveRecord::Base
+    self.table_name = "prompt_canary_rollout_overrides"
+  end
+
   module Storage
     class ActiveRecord
       def write(record)

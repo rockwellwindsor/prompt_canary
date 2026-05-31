@@ -31,9 +31,23 @@ module PromptCanary
     end
 
     def demote(prompt_class, version_name, reason: nil)
-      version = prompt_class.versions.find { |v| v.name == version_name }
-      version&.demote!
+      if ar_storage?
+        require "prompt_canary/storage/active_record_adapter"
+        RolloutOverride.create!(prompt: prompt_class.name, version: version_name,
+                                rollout_override: 0, created_at: Time.now)
+      else
+        version = prompt_class.versions.find { |v| v.name == version_name }
+        version&.demote!
+      end
       publish("prompt_canary.demoted", prompt: prompt_class.name, version: version_name, reason: reason)
+    end
+
+    def restore(prompt_class, version_name)
+      if ar_storage?
+        require "prompt_canary/storage/active_record_adapter"
+        RolloutOverride.where(prompt: prompt_class.name, version: version_name).delete_all
+      end
+      publish("prompt_canary.restored", prompt: prompt_class.name, version: version_name)
     end
 
     def load_prompt_classes(path, loader: method(:require))
@@ -69,6 +83,10 @@ module PromptCanary
 
     def publish(event, payload = {})
       subscribers[event].each { |sub| sub.call(payload) }
+    end
+
+    def ar_storage?
+      defined?(configuration) && configuration.storage == :active_record
     end
 
     def subscribers
