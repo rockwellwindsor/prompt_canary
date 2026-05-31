@@ -10,8 +10,7 @@ gem "rake", "~> 13.0"
 
 gem "rspec", "~> 3.0"
 
-gem "rubocop", "~> 1.21"
-gem "rubocop-rake", require: false
+gem "rubocop", "~> 1.75.0"
 
 gem "anthropic"
 

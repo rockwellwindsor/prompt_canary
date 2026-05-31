@@ -1,5 +1,8 @@
 # PromptCanary
 
+[![CI](https://github.com/rockwellwindsor/prompt_canary/actions/workflows/main.yml/badge.svg)](https://github.com/rockwellwindsor/prompt_canary/actions/workflows/main.yml)
+[![Gem Version](https://badge.fury.io/rb/prompt_canary.svg)](https://badge.fury.io/rb/prompt_canary)
+
 Canary deployments for LLM prompts in Ruby. Declare prompts as versioned Ruby classes, route traffic by percentage or predicate, record telemetry, and automatically roll back misbehaving versions when error rate or latency exceeds a configured threshold.
 
 ## Design philosophy
