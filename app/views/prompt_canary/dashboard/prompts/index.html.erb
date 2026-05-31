@@ -29,6 +29,9 @@
               <span class="badge <%= v[:stable] ? 'badge-stable' : 'badge-candidate' %>">
                 <%= v[:stable] ? "stable" : "candidate" %>
               </span>
+              <% if v[:demoted] %>
+                <span class="badge badge-error">demoted</span>
+              <% end %>
             </td>
             <td class="stat"><%= v[:stats][:call_count] %></td>
             <td class="stat <%= v[:stats][:error_rate].to_f > 0.05 ? 'badge-error' : '' %>">

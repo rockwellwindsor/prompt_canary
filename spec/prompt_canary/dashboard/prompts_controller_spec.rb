@@ -38,6 +38,16 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
       expect(controller.prompts.first[:name]).to eq("TestPrompt")
       expect(controller.prompts.first[:versions].first[:name]).to eq("v1")
     end
+
+    it "includes demoted: false for each version when no overrides are active" do
+      klass = Class.new { include PromptCanary::Promptable }
+      allow(klass).to receive(:name).and_return("TestPrompt")
+      klass.version("v1") { stable true; model "claude-opus-4-7" }
+
+      controller.index
+
+      expect(controller.prompts.first[:versions].first[:demoted]).to eq(false)
+    end
   end
 
   describe "#show" do
@@ -51,6 +61,17 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
 
       expect(controller.prompt[:name]).to eq("TestPrompt")
       expect(controller.prompt[:versions].first[:stats]).to include(:call_count)
+    end
+
+    it "includes demoted: false for each version when no overrides are active" do
+      klass = Class.new { include PromptCanary::Promptable }
+      allow(klass).to receive(:name).and_return("TestPrompt")
+      klass.version("v1") { stable true; model "claude-opus-4-7" }
+
+      controller.instance_variable_set(:@params, { name: "TestPrompt" })
+      controller.show
+
+      expect(controller.prompt[:versions].first[:demoted]).to eq(false)
     end
   end
 end

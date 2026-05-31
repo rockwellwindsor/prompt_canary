@@ -23,12 +23,23 @@ module PromptCanary
           name:     klass.name,
           versions: klass.versions.map do |v|
             {
-              name:   v.name,
-              stable: v.stable?,
-              stats:  PromptCanary.stats(klass, v.name)
+              name:    v.name,
+              stable:  v.stable?,
+              demoted: demoted?(klass.name, v.name),
+              stats:   PromptCanary.stats(klass, v.name)
             }
           end
         }
+      end
+
+      def demoted?(prompt_name, version_name)
+        return false unless defined?(PromptCanary::RolloutOverride)
+
+        PromptCanary::RolloutOverride
+          .where(prompt: prompt_name, version: version_name, rollout_override: 0)
+          .exists?
+      rescue ::ActiveRecord::ConnectionNotEstablished
+        false
       end
     end
   end
