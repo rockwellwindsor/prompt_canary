@@ -19,8 +19,9 @@
 - `PromptCanary::RolloutOverride` — AR model persisting demotions to `prompt_canary_rollout_overrides`; survives restarts and redeploys
 - `PromptCanary.restore` — clears a demotion override and emits `prompt_canary.restored`; router immediately resumes class-defined rollout
 - `rails generate prompt_canary:install` — creates both `prompt_canary_calls` and `prompt_canary_rollout_overrides` migrations and mounts the engine
-- `PromptCanary::Engine` — mountable Rails engine with read-only dashboard; index shows per-version stats with demoted badge; show displays recent calls
+- `PromptCanary::Engine` — mountable Rails engine with read-only dashboard; index and show views display per-version stats, active/inactive row styling, and demoted badge
 - Router reads `prompt_canary_rollout_overrides` on every request when AR is available — demoted versions receive zero traffic without a redeploy
+- Dashboard active/inactive styling — inactive versions (zero rollout or demoted) rendered at reduced opacity; order is stable so a status change is visible without reordering
 
 ### Changed
 

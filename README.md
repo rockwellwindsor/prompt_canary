@@ -6,7 +6,7 @@ Canary deployments for LLM prompts in Ruby. Declare prompts as versioned Ruby cl
 
 PromptCanary treats prompts as code. All versions of a prompt are declared in the same Ruby class and deployed together — there is no external prompt editor, no database of prompt text, and no way to change a prompt without a deploy.
 
-This is a deliberate trade-off. It means prompt changes go through code review, are version-controlled alongside the application, and are testable in CI. It also means this gem is the wrong tool if your team wants prompt authors iterating in a UI between deploys — tools like Humanloop, PromptLayer, or LangSmith are better fits for that workflow.
+This is a deliberate trade-off. It means prompt changes go through code review, are version-controlled alongside the application, and are testable in CI. It also means this gem is the wrong tool if your team wants prompt authors iterating in a UI between deploys — tools like Humanloop, PromptLayer, or LangSmith already handle that workflow.
 
 ## Installation
 
