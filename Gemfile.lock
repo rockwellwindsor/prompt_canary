@@ -2,7 +2,6 @@ PATH
   remote: .
   specs:
     prompt_canary (0.2.0)
-      sqlite3 (~> 2.0)
 
 GEM
   remote: https://rubygems.org/

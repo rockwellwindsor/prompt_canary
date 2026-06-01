@@ -4,8 +4,14 @@ module PromptCanary
   class StorageFactory
     REGISTRY = {
       memory: -> { Storage::Memory.new },
-      sqlite: -> { Storage::SQLite.new },
-      active_record: -> { Storage::ActiveRecord.new }
+      sqlite: lambda {
+        require "prompt_canary/storage/sqlite"
+        Storage::SQLite.new
+      },
+      active_record: lambda {
+        require "prompt_canary/storage/active_record_adapter"
+        Storage::ActiveRecord.new
+      }
     }.freeze
 
     def self.build(storage_name)
