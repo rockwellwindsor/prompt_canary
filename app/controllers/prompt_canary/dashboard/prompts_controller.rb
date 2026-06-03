@@ -13,7 +13,7 @@ module PromptCanary
         klass = PromptCanary.registered_prompts.find { |k| k.name == params[:name] }
         head(:not_found) && return unless klass
 
-        @prompt = build_prompt_data(klass)
+        @prompt = build_prompt_data(klass).merge(events: fetch_events(klass.name))
       end
 
       private
@@ -33,6 +33,18 @@ module PromptCanary
             }
           end
         }
+      end
+
+      def fetch_events(prompt_name)
+        return [] unless defined?(PromptCanary::PromptEvent)
+
+        PromptCanary::PromptEvent
+          .where(prompt: prompt_name)
+          .order(recorded_at: :asc)
+          .limit(10)
+          .to_a
+      rescue ::ActiveRecord::ConnectionNotEstablished, ::ActiveRecord::StatementInvalid
+        []
       end
 
       def demoted?(prompt_name, version_name)

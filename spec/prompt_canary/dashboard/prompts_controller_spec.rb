@@ -129,5 +129,17 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
 
       expect(controller.prompt[:versions].first[:demoted]).to eq(false)
     end
+
+    it "includes an events key with an empty array when PromptEvent is not available" do
+      klass = Class.new { include PromptCanary::Promptable }
+      allow(klass).to receive(:name).and_return("TestPrompt")
+      klass.version("v1") { model "claude-opus-4-7" }
+
+      controller.instance_variable_set(:@params, { name: "TestPrompt" })
+      controller.show
+
+      expect(controller.prompt).to have_key(:events)
+      expect(controller.prompt[:events]).to eq([])
+    end
   end
 end
