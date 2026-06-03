@@ -153,4 +153,48 @@ RSpec.describe PromptCanary::CLI do
       output.string
     end
   end
+
+  context "status command" do
+    before do
+      stub_const("StatusPrompt", Class.new(PromptCanary::Prompt) do
+        version("v1") do
+          model "claude-opus-4-7"
+          system "s"
+        end
+        version("v2") do
+          model "claude-opus-4-7"
+          system "s"
+          rollout percent: 20
+        end
+      end)
+    end
+
+    after { PromptCanary::Prompt.reset_registry! }
+
+    it "prints each version with its status and traffic" do
+      allow(PromptCanary::CLI.new).to receive(:puts)
+      output = []
+      allow_any_instance_of(PromptCanary::CLI).to receive(:puts) { |_, line| output << line }
+
+      PromptCanary::CLI.new.run(%w[status StatusPrompt])
+
+      combined = output.join("\n")
+      expect(combined).to match(/v1/)
+      expect(combined).to match(/PRIMARY/)
+      expect(combined).to match(/v2/)
+      expect(combined).to match(/CANDIDATE/)
+    end
+
+    it "exits with a usage message when prompt name is missing" do
+      expect do
+        PromptCanary::CLI.new.run(%w[status])
+      end.to output(/Usage:/).to_stderr.and raise_error(SystemExit)
+    end
+
+    it "exits with an error when the prompt class does not exist" do
+      expect do
+        PromptCanary::CLI.new.run(%w[status NonExistent])
+      end.to output(/Unknown prompt class:/).to_stderr.and raise_error(SystemExit)
+    end
+  end
 end
