@@ -70,6 +70,14 @@ RSpec.describe "PromptCanary.demote" do
       end
     end
 
+    it "is idempotent — demoting an already-demoted version does not create duplicate records" do
+      PromptCanary.demote(InvoiceExtractor, "v2")
+      PromptCanary.demote(InvoiceExtractor, "v2")
+
+      count = PromptCanary::RolloutOverride.where(prompt: "InvoiceExtractor", version: "v2").count
+      expect(count).to eq(1)
+    end
+
     it "writes a rollout override record when demoting" do
       PromptCanary.demote(InvoiceExtractor, "v2")
 

@@ -40,7 +40,8 @@ module PromptCanary
         return if RolloutOverride.where(prompt: prompt_class.name, version: version_name, rollout_override: 0).exists?
 
         override = RolloutOverride.find_or_initialize_by(prompt: prompt_class.name, version: version_name)
-        override.update!(rollout_override: percent, created_at: Time.now)
+        override.created_at ||= Time.now
+        override.update!(rollout_override: percent)
       else
         version = prompt_class.versions.find { |v| v.name == version_name }
         version.set_rollout!(percent)
@@ -55,7 +56,8 @@ module PromptCanary
       if ar_storage?
         require "prompt_canary/storage/active_record_adapter"
         override = PrimaryOverride.find_or_initialize_by(prompt: prompt_class.name)
-        override.update!(version: version_name, created_at: Time.now)
+        override.created_at ||= Time.now
+        override.update!(version: version_name)
       else
         prompt_class.promote_to_primary!(version_name)
       end
@@ -65,8 +67,9 @@ module PromptCanary
     def demote(prompt_class, version_name, reason: nil)
       if ar_storage?
         require "prompt_canary/storage/active_record_adapter"
-        RolloutOverride.create!(prompt: prompt_class.name, version: version_name,
-                                rollout_override: 0, created_at: Time.now)
+        override = RolloutOverride.find_or_initialize_by(prompt: prompt_class.name, version: version_name)
+        override.created_at ||= Time.now
+        override.update!(rollout_override: 0)
       else
         version = prompt_class.versions.find { |v| v.name == version_name }
         version&.demote!
