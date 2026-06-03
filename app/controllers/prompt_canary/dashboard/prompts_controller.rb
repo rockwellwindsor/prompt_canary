@@ -41,7 +41,7 @@ module PromptCanary
         PromptCanary::RolloutOverride
           .where(prompt: prompt_name, version: version_name, rollout_override: 0)
           .exists?
-      rescue ::ActiveRecord::ConnectionNotEstablished
+      rescue ::ActiveRecord::ConnectionNotEstablished, ::ActiveRecord::StatementInvalid
         false
       end
     end
