@@ -23,12 +23,12 @@ module PromptCanary
           name: klass.name,
           versions: klass.versions.map do |v|
             is_demoted = demoted?(klass.name, v.name)
+            is_primary = klass.primary_version.name == v.name
             {
               name: v.name,
-              stable: v.stable?,
+              primary: is_primary,
               demoted: is_demoted,
-              # stable is always active — it is the router's fallback regardless of rollout
-              active: v.stable? || (!is_demoted && v.rollout.fetch(:percent, 0).positive?),
+              active: is_primary || (!is_demoted && v.rollout.fetch(:percent, 0).positive?),
               stats: PromptCanary.stats(klass, v.name)
             }
           end

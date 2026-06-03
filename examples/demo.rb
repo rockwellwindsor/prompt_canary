@@ -22,7 +22,6 @@ end
 
 class InvoiceExtractor < PromptCanary::Prompt
   version "v1" do
-    stable true
     model  "claude-haiku-4-5-20251001"
     system "Extract structured data from this invoice. Return plain text."
   end

@@ -6,22 +6,17 @@ module PromptCanary
   class Version
     attr_reader :name, :model, :system, :rollout, :rollback_rules
 
-    def initialize(name:, model:, system:, rollout:, stable: false, predicate: nil, rollback_rules: [])
+    def initialize(name:, model:, system:, rollout:, predicate: nil, rollback_rules: [])
       @name = name
       @model = model
       @system = system
       @rollout = rollout
-      @stable = stable
       @predicate = predicate
       @rollback_rules = rollback_rules
     end
 
     def system_for(args = {})
       @system.respond_to?(:call) ? @system.call(args) : @system
-    end
-
-    def stable?
-      @stable
     end
 
     def predicate?

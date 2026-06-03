@@ -7,7 +7,6 @@ RSpec.describe PromptCanary::VersionBuilder do
 
   it "builds a Version with all required fields" do
     builder = described_class.new("v1")
-    builder.stable true
     builder.model "claude-3-haiku-20240307"
     builder.system "You help."
     version = builder.build
@@ -18,7 +17,6 @@ RSpec.describe PromptCanary::VersionBuilder do
 
   it "builds a Version with a dynamic system block" do
     builder = described_class.new("v1")
-    builder.stable true
     builder.model "claude-3-haiku-20240307"
     builder.system { |args| "Hello #{args[:name]}" }
     version = builder.build

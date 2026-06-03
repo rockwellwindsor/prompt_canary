@@ -20,7 +20,7 @@ FIX: Add router fallback for zero-percent rollout
 
 (G)
 
-Ensure the router returns the stable version when rollout percent is
+Ensure the router returns the primary version when rollout percent is
 explicitly set to 0, not just when omitted.
 ```
 

@@ -2,17 +2,12 @@
 
 module PromptCanary
   class VersionBuilder
-    attr_reader :_name, :_model, :_system, :_stable, :_rollout
+    attr_reader :_name, :_model, :_system, :_rollout
 
     def initialize(name)
       @_name = name
-      @_stable = false
       @_rollout = {}
       @_rollback_rules = []
-    end
-
-    def stable(value)
-      @_stable = value
     end
 
     def rollout(value)
@@ -49,7 +44,6 @@ module PromptCanary
         model: _model,
         system: _system,
         rollout: _rollout,
-        stable: _stable,
         predicate: @_predicate,
         rollback_rules: @_rollback_rules
       )

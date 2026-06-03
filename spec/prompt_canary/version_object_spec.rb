@@ -85,7 +85,6 @@ RSpec.describe PromptCanary::Version do
     it "is set via the VersionBuilder DSL with a block" do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
         version("v1") do
-          stable true
           model  "m"
           system { |args| "Hello #{args[:name]}" }
         end
@@ -93,18 +92,6 @@ RSpec.describe PromptCanary::Version do
 
       version = TestPrompt.versions.first
       expect(version.system_for(name: "World")).to eq("Hello World")
-    end
-  end
-
-  describe "#stable?" do
-    it "is true when initialized with stable: true" do
-      version = described_class.new(name: "v1", model: "m", system: "s", rollout: {}, stable: true)
-      expect(version.stable?).to be true
-    end
-
-    it "is false by default" do
-      version = described_class.new(name: "v1", model: "m", system: "s", rollout: {})
-      expect(version.stable?).to be false
     end
   end
 end

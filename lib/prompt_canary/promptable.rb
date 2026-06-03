@@ -22,15 +22,10 @@ module PromptCanary
         @versions ||= []
       end
 
-      def stable_version
-        stable = versions.select(&:stable?)
-        if stable.length > 1
-          raise AmbiguousStableVersionError, "#{self} has #{stable.length} stable versions. " \
-                                             "Only one version can be marked as stable."
-        end
-        raise NoStableVersionError, "#{self} has no stable version" if stable.empty?
+      def primary_version
+        raise NoPrimaryVersionError, "#{self} has no versions registered" if versions.empty?
 
-        stable.first
+        versions.first
       end
 
       def call(context: {}, adapter: nil, recorder: nil, **args)

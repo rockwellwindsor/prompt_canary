@@ -36,7 +36,6 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
       klass.version("v1") do
-        stable true
         model "claude-opus-4-7"
       end
 
@@ -51,7 +50,6 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
       klass.version("v1") do
-        stable true
         model "claude-opus-4-7"
       end
 
@@ -60,11 +58,10 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
       expect(controller.prompts.first[:versions].first[:demoted]).to eq(false)
     end
 
-    it "includes active: true for a stable version" do
+    it "includes active: true for the primary version" do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
       klass.version("v1") do
-        stable true
         model "claude-opus-4-7"
       end
 
@@ -73,11 +70,22 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
       expect(controller.prompts.first[:versions].first[:active]).to eq(true)
     end
 
+    it "includes primary: true for the first declared version" do
+      klass = Class.new { include PromptCanary::Promptable }
+      allow(klass).to receive(:name).and_return("TestPrompt")
+      klass.version("v1") do
+        model "claude-opus-4-7"
+      end
+
+      controller.index
+
+      expect(controller.prompts.first[:versions].first[:primary]).to eq(true)
+    end
+
     it "includes active: false for a candidate version with zero rollout" do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
       klass.version("v1") do
-        stable true
         model "claude-opus-4-7"
         system "s"
       end
@@ -99,7 +107,6 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
       klass.version("v1") do
-        stable true
         model "claude-opus-4-7"
       end
 
@@ -114,7 +121,6 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
       klass = Class.new { include PromptCanary::Promptable }
       allow(klass).to receive(:name).and_return("TestPrompt")
       klass.version("v1") do
-        stable true
         model "claude-opus-4-7"
       end
 

@@ -10,13 +10,25 @@ RSpec.describe PromptCanary::Promptable do
   it "adds DSL class methods to the including class" do
     expect(prompt_class).to respond_to(:version)
     expect(prompt_class).to respond_to(:versions)
-    expect(prompt_class).to respond_to(:stable_version)
+    expect(prompt_class).to respond_to(:primary_version)
     expect(prompt_class).to respond_to(:reset_registry!)
+  end
+
+  it "treats the first declared version as primary with no flag required" do
+    prompt_class.version("v1") do
+      model "m"
+      system "s"
+    end
+    prompt_class.version("v2") do
+      model "m"
+      system "s"
+      rollout percent: 20
+    end
+    expect(prompt_class.primary_version.name).to eq("v1")
   end
 
   it "registers a version via the DSL" do
     prompt_class.version("v1") do
-      stable true
       model "claude-3-haiku-20240307"
       system "You help."
     end
@@ -26,53 +38,23 @@ RSpec.describe PromptCanary::Promptable do
 
   it "raises DuplicateVersionError for duplicate version names" do
     prompt_class.version("v1") do
-      stable true
       model "m"
       system "s"
     end
     expect do
       prompt_class.version("v1") do
-        stable true
         model "m"
         system "s"
       end
     end.to raise_error(PromptCanary::DuplicateVersionError)
   end
 
-  it "returns the stable version" do
-    prompt_class.version("v1") do
-      stable true
-      model "m"
-      system "s"
-    end
-    expect(prompt_class.stable_version.name).to eq("v1")
-  end
-
-  it "raises NoStableVersionError when no version is stable" do
-    prompt_class.version("v1") do
-      model "m"
-      system "s"
-    end
-    expect { prompt_class.stable_version }.to raise_error(PromptCanary::NoStableVersionError)
-  end
-
-  it "raises AmbiguousStableVersionError when two versions are stable" do
-    prompt_class.version("v1") do
-      stable true
-      model "m"
-      system "s"
-    end
-    prompt_class.version("v2") do
-      stable true
-      model "m"
-      system "s"
-    end
-    expect { prompt_class.stable_version }.to raise_error(PromptCanary::AmbiguousStableVersionError)
+  it "raises NoPrimaryVersionError when no versions are registered" do
+    expect { prompt_class.primary_version }.to raise_error(PromptCanary::NoPrimaryVersionError)
   end
 
   it "registers rollout percent via the DSL" do
     prompt_class.version("v1") do
-      stable true
       model "m"
       system "s"
     end
@@ -86,7 +68,6 @@ RSpec.describe PromptCanary::Promptable do
 
   it "registers rollback rules via the DSL" do
     prompt_class.version("v1") do
-      stable true
       model "m"
       system "s"
       rollback_if :error_rate, greater_than: 0.05, over: 100
@@ -99,7 +80,6 @@ RSpec.describe PromptCanary::Promptable do
 
   it "registers a dynamic system block via the DSL" do
     prompt_class.version("v1") do
-      stable true
       model "m"
       system { |args| "Hello #{args[:name]}" }
     end

@@ -4,7 +4,6 @@ RSpec.describe PromptCanary::CLI do
   before do
     stub_const("SomePrompt", Class.new(PromptCanary::Prompt) do
       version("v1") do
-        stable true
         model "claude-opus-4-7"
         system "Extract."
       end

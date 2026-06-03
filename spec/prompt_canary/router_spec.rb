@@ -6,17 +6,16 @@ RSpec.describe PromptCanary::Router do
   let(:prompt_class) do
     stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
       version("v1") do
-        stable true
         model "m"
         system "s"
       end
     end)
   end
 
-  describe "with only a stable version" do
-    it "always returns the stable version regardless of context" do
-      expect(PromptCanary::Router.choose(prompt_class, {})).to eq(prompt_class.stable_version)
-      expect(PromptCanary::Router.choose(prompt_class, { user: { id: 42 } })).to eq(prompt_class.stable_version)
+  describe "with only a primary version" do
+    it "always returns the primary version regardless of context" do
+      expect(PromptCanary::Router.choose(prompt_class, {})).to eq(prompt_class.primary_version)
+      expect(PromptCanary::Router.choose(prompt_class, { user: { id: 42 } })).to eq(prompt_class.primary_version)
     end
   end
 
@@ -24,7 +23,6 @@ RSpec.describe PromptCanary::Router do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
         version("v1") do
-          stable true
           model "m"
           system "s"
         end
@@ -37,17 +35,17 @@ RSpec.describe PromptCanary::Router do
       end)
     end
 
-    it "routes beta users to the partial version regardless of percent" do
+    it "routes beta users to the candidate version regardless of percent" do
       result = PromptCanary::Router.choose(prompt_class, { user: { beta: true } })
       expect(result.name).to eq("v2")
     end
 
-    it "routes non-beta users to stable" do
+    it "routes non-beta users to primary" do
       result = PromptCanary::Router.choose(prompt_class, { user: { beta: false } })
       expect(result.name).to eq("v1")
     end
 
-    it "falls back to stable when the predicate raises an exception" do
+    it "falls back to primary when the predicate raises an exception" do
       result = PromptCanary::Router.choose(prompt_class, { user: nil })
       expect(result.name).to eq("v1")
     end
@@ -57,7 +55,6 @@ RSpec.describe PromptCanary::Router do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
         version("v1") do
-          stable true
           model "m"
           system "s"
         end
@@ -69,7 +66,7 @@ RSpec.describe PromptCanary::Router do
       end)
     end
 
-    it "always returns the stable version" do
+    it "always returns the primary version" do
       10.times do |i|
         result = PromptCanary::Router.choose(prompt_class, { call_id: i })
         expect(result.name).to eq("v1")
@@ -81,7 +78,6 @@ RSpec.describe PromptCanary::Router do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
         version("v1") do
-          stable true
           model "m"
           system "s"
         end
@@ -93,7 +89,7 @@ RSpec.describe PromptCanary::Router do
       end)
     end
 
-    it "routes approximately half of calls to the partial version" do
+    it "routes approximately half of calls to the candidate version" do
       results = 1000.times.map { |i| PromptCanary::Router.choose(prompt_class, { call_id: i }).name }
       partial_count = results.count("v2")
       expect(partial_count).to be_between(400, 600)
@@ -104,7 +100,6 @@ RSpec.describe PromptCanary::Router do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
         version("v1") do
-          stable true
           model "m"
           system "s"
         end
@@ -116,14 +111,14 @@ RSpec.describe PromptCanary::Router do
       end)
     end
 
-    it "always returns the partial version when call_id is present" do
+    it "always returns the candidate version when call_id is present" do
       10.times do |i|
         result = PromptCanary::Router.choose(prompt_class, { call_id: i })
         expect(result.name).to eq("v2")
       end
     end
 
-    it "falls back to stable when no call_id is present" do
+    it "falls back to primary when no call_id is present" do
       result = PromptCanary::Router.choose(prompt_class, {})
       expect(result.name).to eq("v1")
     end
@@ -159,7 +154,6 @@ RSpec.describe PromptCanary::Router do
     let(:prompt_class) do
       stub_const("TestPrompt", Class.new(PromptCanary::Prompt) do
         version("v1") do
-          stable true
           model "m"
           system "s"
         end
@@ -178,7 +172,7 @@ RSpec.describe PromptCanary::Router do
       end
     end
 
-    it "routes all traffic to stable when a zero override exists for the candidate" do
+    it "routes all traffic to primary when a zero override exists for the candidate" do
       PromptCanary::RolloutOverride.create!(
         prompt: "TestPrompt", version: "v2", rollout_override: 0, created_at: Time.now
       )

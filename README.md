@@ -7,9 +7,7 @@ Canary deployments for LLM prompts in Ruby. Declare prompts as versioned Ruby cl
 
 ## Design philosophy
 
-PromptCanary treats prompts as code. All versions of a prompt are declared in the same Ruby class and deployed together — there is no external prompt editor, no database of prompt text, and no way to change a prompt without a deploy.
-
-This is a deliberate trade-off. It means prompt changes go through code review, are version-controlled alongside the application, and are testable in CI. It also means this gem is the wrong tool if your team wants prompt authors iterating in a UI between deploys — tools like Humanloop, PromptLayer, or LangSmith already handle that workflow.
+PromptCanary's value is in routing, telemetry, and rollback — not in where your prompt text lives. You can declare versions directly in Ruby classes, load them from database records at boot, or both. Either way the gem handles traffic splitting, call recording, and automatic demotion identically.
 
 ## Installation
 
@@ -75,16 +73,13 @@ class InvoiceExtractor
   include PromptCanary::Promptable
 
   version "v1" do
-    stable true
     model  "claude-opus-4-7"
     system "Extract structured data from this invoice."
   end
 end
 ```
 
-Exactly one version must be marked `stable`. Declaring zero or two stable versions raises at class load time.
-
-Place prompt classes in `app/prompts/` — the Railtie loads them automatically on boot.
+The first declared version is automatically treated as primary — no flag needed. Place prompt classes in `app/prompts/` — the Railtie loads them automatically on boot.
 
 ## Calling a Prompt
 
@@ -110,7 +105,6 @@ class InvoiceExtractor
   include PromptCanary::Promptable
 
   version "v1" do
-    stable true
     model  "claude-opus-4-7"
     system "Extract structured data from this invoice."
   end
@@ -150,7 +144,7 @@ InvoiceExtractor.call(
 # => routes to v2 for beta users
 ```
 
-If the predicate raises, the router falls back to the stable version — always safe.
+If the predicate raises, the router falls back to the primary version — always safe.
 
 ## Auto-Rollback
 
@@ -215,7 +209,7 @@ Or from Ruby:
 PromptCanary.demote(InvoiceExtractor, "v2", reason: "error rate spike")
 ```
 
-When using `storage: :active_record`, demotion writes to `prompt_canary_rollout_overrides` — the override survives restarts and redeploys. The router reads it on every request and routes all traffic to the stable version until the override is cleared.
+When using `storage: :active_record`, demotion writes to `prompt_canary_rollout_overrides` — the override survives restarts and redeploys. The router reads it on every request and routes all traffic to the primary version until the override is cleared.
 
 To restore a version to its class-defined rollout:
 

@@ -5,7 +5,6 @@ RSpec.describe "rollback_if DSL" do
     stub_const("TestPrompt", Class.new do
       include PromptCanary::Promptable
       version("v1") do
-        stable true
         model "m"
         system "s"
         rollback_if :error_rate, greater_than: 0.05, over: 100
@@ -24,7 +23,6 @@ RSpec.describe "rollback_if DSL" do
     stub_const("TestPrompt", Class.new do
       include PromptCanary::Promptable
       version("v1") do
-        stable true
         model "m"
         system "s"
         rollback_if :eval_score, less_than: 0.75, over: 50
@@ -41,7 +39,6 @@ RSpec.describe "rollback_if DSL" do
       stub_const("TestPrompt", Class.new do
         include PromptCanary::Promptable
         version("v1") do
-          stable true
           model "m"
           system "s"
           rollback_if :error_rate, over: 100

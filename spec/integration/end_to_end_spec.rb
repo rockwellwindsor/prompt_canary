@@ -20,7 +20,6 @@ RSpec.describe "Prompt.call end-to-end" do
 
     stub_const("InvoiceExtractor", Class.new(PromptCanary::Prompt) do
       version("v1") do
-        stable true
         model "claude-opus-4-7"
         system "Extract invoice data."
       end

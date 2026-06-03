@@ -20,8 +20,8 @@
           <% if v[:active] %>
             <span class="badge badge-active">active</span>
           <% end %>
-          <span class="badge <%= v[:stable] ? 'badge-stable' : 'badge-candidate' %>">
-            <%= v[:stable] ? "stable" : "candidate" %>
+          <span class="badge <%= v[:primary] ? 'badge-primary' : 'badge-candidate' %>">
+            <%= v[:primary] ? "primary" : "candidate" %>
           </span>
           <% if v[:demoted] %>
             <span class="badge badge-error">demoted</span>

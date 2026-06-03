@@ -20,7 +20,6 @@ end
 
 class SupportResponder < PromptCanary::Prompt
   version "v1" do
-    stable true
     model  "claude-haiku-4-5-20251001"
     system "You are a helpful customer support agent."
   end
@@ -84,9 +83,9 @@ PromptCanary::Monitor.new(recorder: recorder).evaluate(SupportResponder)
 
 puts "v2 rollout percent: #{v2.rollout[:percent]}% (expected 0 — demoted)\n\n"
 
-# --- Confirm router falls back to stable ---
+# --- Confirm router falls back to primary ---
 
-puts "=== Router now falls back to v1 ===\n\n"
+puts "=== Router now falls back to v1 (primary) ===\n\n"
 
 adapter = Object.new
 def adapter.call(version:, args:)
