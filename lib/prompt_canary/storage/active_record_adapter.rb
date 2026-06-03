@@ -16,6 +16,10 @@ module PromptCanary
     self.table_name = "prompt_canary_primary_overrides"
   end
 
+  class PromptEvent < ::ActiveRecord::Base
+    self.table_name = "prompt_canary_events"
+  end
+
   module Storage
     class ActiveRecord
       def write(record)
