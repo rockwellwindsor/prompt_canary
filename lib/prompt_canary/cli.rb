@@ -7,7 +7,8 @@ module PromptCanary
     def run(args)
       subcommand = args.shift
       case subcommand
-      when "demote" then demote(args)
+      when "demote"   then demote(args)
+      when "promote"  then promote(args)
       else
         warn "Unknown command: #{subcommand}"
         exit 1
@@ -15,6 +16,27 @@ module PromptCanary
     end
 
     private
+
+    def promote(args)
+      options = {}
+      OptionParser.new do |opts|
+        opts.on("--reason REASON") { |r| options[:reason] = r }
+      end.parse!(args)
+
+      prompt_name, version_name = args
+      if prompt_name.nil? || version_name.nil?
+        warn "Usage: prompt_canary promote PROMPT_CLASS VERSION [--reason REASON]"
+        exit 1
+      end
+
+      prompt_class = begin
+        Object.const_get(prompt_name)
+      rescue NameError
+        warn "Unknown prompt class: #{prompt_name}"
+        exit 1
+      end
+      PromptCanary.promote(prompt_class, version_name, reason: options[:reason])
+    end
 
     def demote(args)
       options = {}

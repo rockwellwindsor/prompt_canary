@@ -37,4 +37,28 @@ RSpec.describe PromptCanary::CLI do
     expect(PromptCanary).to have_received(:demote)
       .with(SomePrompt, "v2", reason: "high error rate")
   end
+
+  it "promotes the named version" do
+    allow(PromptCanary).to receive(:promote)
+
+    expect { PromptCanary::CLI.new.run(%w[promote SomePrompt v2]) }.not_to raise_error
+
+    expect(PromptCanary).to have_received(:promote).with(SomePrompt, "v2", reason: nil)
+  end
+
+  it "promotes with an optional reason" do
+    allow(PromptCanary).to receive(:promote)
+
+    expect do
+      PromptCanary::CLI.new.run(["promote", "SomePrompt", "v2", "--reason", "canary passed"])
+    end.not_to raise_error
+
+    expect(PromptCanary).to have_received(:promote).with(SomePrompt, "v2", reason: "canary passed")
+  end
+
+  it "exits with a usage message when promote is missing arguments" do
+    expect do
+      PromptCanary::CLI.new.run(%w[promote SomePrompt])
+    end.to output(/Usage:/).to_stderr.and raise_error(SystemExit)
+  end
 end
