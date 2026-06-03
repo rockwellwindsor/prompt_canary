@@ -5,6 +5,7 @@ module PromptCanary
   class ConfigurationError < Error; end
   class DuplicateVersionError < Error; end
   class NoPrimaryVersionError < Error; end
+  class UnknownVersionError < Error; end
 
   class << self
     def configure
@@ -27,6 +28,21 @@ module PromptCanary
     def reset_configuration!
       @configuration = nil
       @registered_prompts = nil
+    end
+
+    def promote(prompt_class, version_name, reason: nil)
+      unless prompt_class.versions.any? { |v| v.name == version_name }
+        raise UnknownVersionError, "#{version_name.inspect} is not a registered version of #{prompt_class}"
+      end
+
+      if ar_storage?
+        require "prompt_canary/storage/active_record_adapter"
+        override = PrimaryOverride.find_or_initialize_by(prompt: prompt_class.name)
+        override.update!(version: version_name, created_at: Time.now)
+      else
+        prompt_class.promote_to_primary!(version_name)
+      end
+      publish("prompt_canary.promoted", prompt: prompt_class.name, version: version_name, reason: reason)
     end
 
     def demote(prompt_class, version_name, reason: nil)

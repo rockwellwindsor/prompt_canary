@@ -149,6 +149,14 @@ RSpec.describe PromptCanary::Router do
           t.datetime :created_at, null: false
         end
       end
+      unless conn.table_exists?(:prompt_canary_primary_overrides)
+        conn.create_table(:prompt_canary_primary_overrides) do |t|
+          t.string :prompt, null: false
+          t.string :version, null: false
+          t.datetime :created_at, null: false
+        end
+        conn.add_index :prompt_canary_primary_overrides, :prompt, unique: true
+      end
     end
 
     let(:prompt_class) do

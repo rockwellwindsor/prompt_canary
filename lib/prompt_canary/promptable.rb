@@ -25,7 +25,15 @@ module PromptCanary
       def primary_version
         raise NoPrimaryVersionError, "#{self} has no versions registered" if versions.empty?
 
-        versions.first
+        if @primary_override
+          versions.find { |v| v.name == @primary_override } || versions.first
+        else
+          versions.first
+        end
+      end
+
+      def promote_to_primary!(version_name)
+        @primary_override = version_name
       end
 
       def call(context: {}, adapter: nil, recorder: nil, **args)
@@ -35,6 +43,7 @@ module PromptCanary
 
       def reset_registry!
         @versions = []
+        @primary_override = nil
       end
     end
   end
