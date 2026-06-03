@@ -30,6 +30,23 @@ module PromptCanary
       @registered_prompts = nil
     end
 
+    def set_canary(prompt_class, version_name, percent)
+      unless prompt_class.versions.any? { |v| v.name == version_name }
+        raise UnknownVersionError, "#{version_name.inspect} is not a registered version of #{prompt_class}"
+      end
+
+      if ar_storage?
+        require "prompt_canary/storage/active_record_adapter"
+        return if RolloutOverride.where(prompt: prompt_class.name, version: version_name, rollout_override: 0).exists?
+
+        override = RolloutOverride.find_or_initialize_by(prompt: prompt_class.name, version: version_name)
+        override.update!(rollout_override: percent, created_at: Time.now)
+      else
+        version = prompt_class.versions.find { |v| v.name == version_name }
+        version.set_rollout!(percent)
+      end
+    end
+
     def promote(prompt_class, version_name, reason: nil)
       unless prompt_class.versions.any? { |v| v.name == version_name }
         raise UnknownVersionError, "#{version_name.inspect} is not a registered version of #{prompt_class}"

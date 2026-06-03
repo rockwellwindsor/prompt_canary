@@ -40,6 +40,10 @@ module PromptCanary
       roll < rollout.fetch(:percent, 0)
     end
 
+    def set_rollout!(percent)
+      @rollout = { percent: percent }
+    end
+
     def demote!
       @rollout = { percent: 0 }
     end

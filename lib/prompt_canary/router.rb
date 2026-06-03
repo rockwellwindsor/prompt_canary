@@ -8,18 +8,32 @@ module PromptCanary
       return primary unless partial
       return primary if demoted?(prompt_class.name, partial.name)
 
-      route_partial(partial, primary, context)
+      route_partial(partial, primary, context, prompt_class.name)
     end
 
-    def self.route_partial(partial, primary, context)
+    def self.route_partial(partial, primary, context, prompt_name)
       return partial if partial.matches_predicate?(context)
 
       call_id = context[:call_id]
       return primary unless call_id
 
-      partial.routes?(call_id) ? partial : primary
+      percent = canary_percent(prompt_name, partial.name, partial.rollout.fetch(:percent, 0))
+      Zlib.crc32(call_id.to_s) % 100 < percent ? partial : primary
     end
     private_class_method :route_partial
+
+    def self.canary_percent(prompt_name, version_name, default)
+      return default unless defined?(PromptCanary::RolloutOverride)
+
+      override = PromptCanary::RolloutOverride
+                 .where(prompt: prompt_name, version: version_name)
+                 .where("rollout_override > 0")
+                 .first
+      override ? override.rollout_override : default
+    rescue ::ActiveRecord::ConnectionNotEstablished, ::ActiveRecord::StatementInvalid
+      default
+    end
+    private_class_method :canary_percent
 
     def self.db_primary(prompt_class)
       return nil unless defined?(PromptCanary::PrimaryOverride)
