@@ -62,6 +62,21 @@ RSpec.describe "PromptCanary.demote" do
         t.integer  :rollout_override, null: false
         t.datetime :created_at,       null: false
       end
+      ::ActiveRecord::Base.connection.create_table :prompt_canary_events do |t|
+        t.string   :prompt,               null: false
+        t.string   :version,              null: false
+        t.string   :event,                null: false
+        t.integer  :previous_percent
+        t.integer  :new_percent
+        t.string   :previous_status
+        t.string   :new_status
+        t.text     :reason
+        t.string   :triggered_by, null: false
+        t.string   :triggering_metric
+        t.float    :triggering_value
+        t.float    :triggering_threshold
+        t.datetime :recorded_at, null: false
+      end
     end
 
     before do

@@ -77,6 +77,23 @@ RSpec.describe "PromptCanary.promote" do
         end
         conn.add_index :prompt_canary_primary_overrides, :prompt, unique: true
       end
+      unless conn.table_exists?(:prompt_canary_events)
+        conn.create_table(:prompt_canary_events) do |t|
+          t.string :prompt, null: false
+          t.string :version, null: false
+          t.string :event, null: false
+          t.integer :previous_percent
+          t.integer :new_percent
+          t.string :previous_status
+          t.string :new_status
+          t.text :reason
+          t.string :triggered_by, null: false
+          t.string :triggering_metric
+          t.float :triggering_value
+          t.float :triggering_threshold
+          t.datetime :recorded_at, null: false
+        end
+      end
     end
 
     before do

@@ -14,7 +14,15 @@ module PromptCanary
                                         version: version.name,
                                         over: rule.window)
 
-          PromptCanary.demote(prompt_class, version.name) if rule.violated_by?(value)
+          next unless rule.violated_by?(value)
+
+          PromptCanary.demote(
+            prompt_class, version.name,
+            triggered_by: "monitor",
+            triggering_metric: rule.metric.to_s,
+            triggering_value: value,
+            triggering_threshold: rule.threshold
+          )
         end
       end
     end

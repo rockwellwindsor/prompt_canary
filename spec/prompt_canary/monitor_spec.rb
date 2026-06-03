@@ -38,7 +38,8 @@ RSpec.describe PromptCanary::Monitor do
 
       PromptCanary::Monitor.new(recorder: recorder).evaluate(InvoiceExtractor)
 
-      expect(PromptCanary).to have_received(:demote).with(InvoiceExtractor, "v2")
+      expect(PromptCanary).to have_received(:demote).with(InvoiceExtractor, "v2",
+                                                          hash_including(triggered_by: "monitor"))
     end
   end
 
@@ -73,7 +74,8 @@ RSpec.describe PromptCanary::Monitor do
       it "demotes the version" do
         allow(PromptCanary).to receive(:demote)
         PromptCanary::Monitor.new(recorder: recorder).evaluate(InvoiceExtractor)
-        expect(PromptCanary).to have_received(:demote).with(InvoiceExtractor, "v2")
+        expect(PromptCanary).to have_received(:demote).with(InvoiceExtractor, "v2",
+                                                            hash_including(triggered_by: "monitor"))
       end
     end
 
@@ -92,7 +94,8 @@ RSpec.describe PromptCanary::Monitor do
       it "demotes the version" do
         allow(PromptCanary).to receive(:demote)
         PromptCanary::Monitor.new(recorder: recorder).evaluate(InvoiceExtractor)
-        expect(PromptCanary).to have_received(:demote).with(InvoiceExtractor, "v2")
+        expect(PromptCanary).to have_received(:demote).with(InvoiceExtractor, "v2",
+                                                            hash_including(triggered_by: "monitor"))
       end
     end
   end
