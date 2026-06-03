@@ -45,7 +45,13 @@ module PromptCanary
     end
 
     def demote!
+      @previous_rollout = @rollout.fetch(:percent, 0)
       @rollout = { percent: 0 }
+    end
+
+    def restore!
+      @rollout = { percent: @previous_rollout || 0 }
+      @previous_rollout = nil
     end
   end
 end

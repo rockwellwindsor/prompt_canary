@@ -24,6 +24,14 @@ RSpec.describe "PromptCanary.demote" do
     expect(version.rollout[:percent]).to eq(0)
   end
 
+  it "restores traffic to the pre-demotion percentage" do
+    PromptCanary.demote(InvoiceExtractor, "v2")
+    PromptCanary.restore(InvoiceExtractor, "v2")
+
+    version = InvoiceExtractor.versions.find { |v| v.name == "v2" }
+    expect(version.rollout[:percent]).to eq(50)
+  end
+
   it "emits a prompt_canary.demoted notification" do
     received = []
     PromptCanary.subscribe("prompt_canary.demoted") { |payload| received << payload }
