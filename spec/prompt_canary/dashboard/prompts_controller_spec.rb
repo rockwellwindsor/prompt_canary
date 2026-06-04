@@ -12,6 +12,14 @@ unless defined?(ActionController::Base)
       end
 
       def render(**); end
+
+      def redirect_to(*); end
+
+      def head(*); end
+
+      def prompt_path(name)
+        "/prompt_canary/dashboard/prompts/#{name}"
+      end
     end
   end
 end
@@ -140,6 +148,42 @@ RSpec.describe PromptCanary::Dashboard::PromptsController do
 
       expect(controller.prompt).to have_key(:events)
       expect(controller.prompt[:events]).to eq([])
+    end
+  end
+
+  describe "#promote" do
+    it "calls PromptCanary.promote with the prompt class and version" do
+      klass = Class.new { include PromptCanary::Promptable }
+      allow(klass).to receive(:name).and_return("TestPrompt")
+      klass.version("v1") { model "claude-opus-4-7" }
+      klass.version("v2") do
+        model "claude-opus-4-7"
+        rollout percent: 20
+      end
+
+      allow(PromptCanary).to receive(:promote)
+      allow(controller).to receive(:redirect_to)
+
+      controller.instance_variable_set(:@params, { name: "TestPrompt", version: "v2" })
+      controller.promote
+
+      expect(PromptCanary).to have_received(:promote).with(klass, "v2")
+    end
+
+    it "redirects to the show page after promoting" do
+      klass = Class.new { include PromptCanary::Promptable }
+      allow(klass).to receive(:name).and_return("TestPrompt")
+      klass.version("v1") { model "claude-opus-4-7" }
+      klass.version("v2") do
+        model "claude-opus-4-7"
+        rollout percent: 20
+      end
+
+      allow(PromptCanary).to receive(:promote)
+      expect(controller).to receive(:redirect_to)
+
+      controller.instance_variable_set(:@params, { name: "TestPrompt", version: "v2" })
+      controller.promote
     end
   end
 end

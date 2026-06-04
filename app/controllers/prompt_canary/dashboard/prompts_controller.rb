@@ -16,6 +16,14 @@ module PromptCanary
         @prompt = build_prompt_data(klass).merge(events: fetch_events(klass.name))
       end
 
+      def promote
+        klass = PromptCanary.registered_prompts.find { |k| k.name == params[:name] }
+        head(:not_found) && return unless klass
+
+        PromptCanary.promote(klass, params[:version])
+        redirect_to prompt_path(params[:name])
+      end
+
       private
 
       def build_prompt_data(klass)

@@ -10,6 +10,7 @@
       <th>Error Rate</th>
       <th>P95 Latency</th>
       <th>Last Called</th>
+      <th>Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -33,10 +34,52 @@
         </td>
         <td class="stat"><%= v[:stats][:latency_p95] ? "#{v[:stats][:latency_p95]}ms" : "—" %></td>
         <td class="stat muted"><%= v[:stats][:last_called_at] ? v[:stats][:last_called_at].strftime("%b %d %H:%M") : "—" %></td>
+        <td>
+          <% unless v[:primary] || v[:demoted] %>
+            <%= form_with url: promote_prompt_path(@prompt[:name]), method: :post, local: true do |f| %>
+              <%= f.hidden_field :version, value: v[:name] %>
+              <%= f.submit "Promote", class: "btn" %>
+            <% end %>
+          <% end %>
+        </td>
       </tr>
     <% end %>
   </tbody>
 </table>
+
+<% if @prompt[:events].any? %>
+  <h3>Deployment History</h3>
+  <table style="margin-bottom: 24px;">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Event</th>
+        <th>Version</th>
+        <th>Change</th>
+        <th>Triggered By</th>
+        <th>Reason</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @prompt[:events].each do |e| %>
+        <tr>
+          <td class="stat muted"><%= e.recorded_at.strftime("%b %d %H:%M") %></td>
+          <td><span class="badge badge-candidate"><%= e.event.upcase %></span></td>
+          <td class="stat"><%= e.version %></td>
+          <td class="stat muted">
+            <% if e.previous_status || e.new_status %>
+              <%= e.previous_status %> &rarr; <%= e.new_status %>
+            <% elsif !e.previous_percent.nil? && !e.new_percent.nil? %>
+              <%= e.previous_percent %>% &rarr; <%= e.new_percent %>%
+            <% end %>
+          </td>
+          <td class="stat"><%= e.triggered_by %></td>
+          <td class="muted"><%= e.reason %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
 
 <h2>Recent Calls</h2>
 <% calls = PromptCanary::Call.where(prompt: @prompt[:name]).order(recorded_at: :desc).limit(50) %>
