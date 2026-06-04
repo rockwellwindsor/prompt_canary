@@ -145,6 +145,18 @@ RSpec.describe PromptCanary::CLI do
       end.to output(/Usage:/).to_stderr.and raise_error(SystemExit)
     end
 
+    it "exits with an error when --since format is invalid" do
+      expect do
+        PromptCanary::CLI.new.run(%w[history SomePrompt --since abc])
+      end.to output(/Invalid --since/).to_stderr.and raise_error(SystemExit)
+    end
+
+    it "exits with an error when --since is zero days" do
+      expect do
+        PromptCanary::CLI.new.run(%w[history SomePrompt --since 0d])
+      end.to output(/Invalid --since/).to_stderr.and raise_error(SystemExit)
+    end
+
     def capture_output
       output = StringIO.new
       $stdout = output

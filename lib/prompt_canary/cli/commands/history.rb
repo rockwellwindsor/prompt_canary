@@ -18,6 +18,11 @@ module PromptCanary
             exit 1
           end
 
+          if options[:since] && options[:since] !~ /\A[1-9]\d*d\z/
+            warn "Invalid --since format: #{options[:since].inspect}. Expected format: Nd (e.g. 7d)"
+            exit 1
+          end
+
           require "prompt_canary/storage/active_record_adapter" unless defined?(PromptCanary::PromptEvent)
           history_scope(prompt_name, options[:since]).each { |e| puts format_event(e) }
         end
