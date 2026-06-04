@@ -29,7 +29,7 @@ Run the install generator:
 rails generate prompt_canary:install
 ```
 
-This creates the `prompt_canary_calls` migration and mounts the engine in `config/routes.rb`. Then run:
+This creates a single migration that sets up all four tables (`prompt_canary_calls`, `prompt_canary_rollout_overrides`, `prompt_canary_primary_overrides`, `prompt_canary_events`) and mounts the engine in `config/routes.rb`. Then run:
 
 ```bash
 rails db:migrate
@@ -81,6 +81,30 @@ end
 
 The first declared version is automatically treated as primary — no flag needed. Place prompt classes in `app/prompts/` — the Railtie loads them automatically on boot.
 
+## Loading Prompts from the Database
+
+Declaring versions in the class body and loading them from database records are equally supported patterns. The DSL works the same either way — it is registering `Version` objects regardless of where the data comes from.
+
+To load from the DB, call the DSL in an initializer after the connection is established:
+
+```ruby
+# config/initializers/prompt_canary.rb
+PromptCanary.configure do |c|
+  c.adapter = :anthropic
+  c.storage = :active_record
+end
+
+PromptRecord.all.each do |record|
+  klass = record.prompt_class.constantize
+  klass.version(record.version_name) do
+    model  record.model
+    system record.system_prompt
+  end
+end
+```
+
+Choose whichever approach fits your team's operational needs. The gem has no opinion on where prompt text lives.
+
 ## Calling a Prompt
 
 ```ruby
@@ -131,7 +155,6 @@ Route to a version based on any condition:
 version "v2" do
   model  "claude-opus-4-7"
   system "Extract structured data. Return JSON."
-  rollout percent: 0
   rollout_to { |ctx| ctx[:user]&.fetch(:beta, false) }
 end
 ```
@@ -145,6 +168,54 @@ InvoiceExtractor.call(
 ```
 
 If the predicate raises, the router falls back to the primary version — always safe.
+
+## Canary Traffic
+
+Traffic percentage and version status are independent controls. `rollout percent:` sets the initial split at declaration time. `set_canary` adjusts it at runtime without a deploy:
+
+```ruby
+PromptCanary.set_canary(InvoiceExtractor, "v2", 20)  # send 20% to v2
+PromptCanary.set_canary(InvoiceExtractor, "v2", 50)  # ramp up to 50%
+PromptCanary.set_canary(InvoiceExtractor, "v2", 80)  # almost there
+```
+
+Passing `0` to `set_canary` is not allowed — use `demote` to stop traffic. This keeps the audit trail unambiguous.
+
+### Typical canary ramp
+
+```
+v1: primary,   100% traffic
+v2: candidate,  20% traffic  ← set_canary(InvoiceExtractor, "v2", 20)
+                              ← watch telemetry
+v2: candidate,  50% traffic  ← set_canary(InvoiceExtractor, "v2", 50)
+                              ← looks good
+v2: primary,    50% traffic  ← promote(InvoiceExtractor, "v2")
+v2: primary,   100% traffic  ← demote(InvoiceExtractor, "v1")
+```
+
+Promoting v2 changes its status only — it does not flip traffic to 100%. The traffic ramp is a separate deliberate step.
+
+## Promote and Demote
+
+**Status** (primary / candidate / demoted) and **traffic percentage** are separate, independent concepts.
+
+- **promote** — marks a version as primary. The previous primary becomes a candidate. Traffic percentages are not changed.
+- **demote** — sets status to demoted and zeros traffic immediately. This is the emergency brake.
+- **restore** — returns a demoted version to candidate status and restores its pre-demotion traffic percentage.
+
+```ruby
+PromptCanary.promote(InvoiceExtractor, "v2")
+PromptCanary.promote(InvoiceExtractor, "v2", reason: "canary passed")
+
+PromptCanary.demote(InvoiceExtractor, "v2")
+PromptCanary.demote(InvoiceExtractor, "v2", reason: "error rate spike")
+
+PromptCanary.restore(InvoiceExtractor, "v2")
+```
+
+Attempting to demote the primary version when no other viable candidate exists raises `CannotDemotePrimaryError` — the system is never left without a route target.
+
+All status operations write an audit event to `prompt_canary_events`.
 
 ## Auto-Rollback
 
@@ -178,14 +249,32 @@ recorder = PromptCanary::Recorder.new(storage: PromptCanary::Storage::SQLite.new
 PromptCanary::Monitor.new(recorder: recorder).evaluate(InvoiceExtractor)
 ```
 
-When a rule fires, `PromptCanary.demote` is called automatically — the version's rollout is zeroed and a `prompt_canary.demoted` notification is emitted.
+When a rule fires, `PromptCanary.demote` is called automatically — the version's rollout is zeroed, a `prompt_canary.demoted` notification is emitted, and a monitor-triggered audit event is written.
+
+## CLI
+
+```bash
+# Promote a version to primary
+prompt_canary promote InvoiceExtractor v2
+prompt_canary promote InvoiceExtractor v2 --reason "canary passed"
+
+# Demote a version (emergency stop)
+prompt_canary demote InvoiceExtractor v2 --reason "error rate spike"
+
+# Show current status and traffic for all versions
+prompt_canary status InvoiceExtractor
+
+# Show deployment history
+prompt_canary history InvoiceExtractor
+prompt_canary history InvoiceExtractor --since 7d
+```
 
 ## Dashboard
 
-The engine mounts a read-only web dashboard at the path configured in your routes (default `/prompt_canary`):
+The engine mounts a web dashboard at the path configured in your routes (default `/prompt_canary`):
 
 - **Index** — all registered prompt classes with per-version call counts, error rates, P95 latency, and last-called timestamps
-- **Show** — version breakdown plus the 50 most recent calls with per-call latency, token counts, and error detail
+- **Show** — version breakdown with a Promote button for candidate versions, deployment history from the audit trail, and the 50 most recent calls with per-call latency, token counts, and error detail
 
 No authentication is wired in by default. Protect the mount point with your app's existing auth if needed:
 
@@ -195,35 +284,15 @@ authenticate :user, ->(u) { u.admin? } do
 end
 ```
 
-## Manual Rollback
-
-From the command line:
-
-```bash
-prompt_canary demote InvoiceExtractor v2 --reason "error rate spike"
-```
-
-Or from Ruby:
-
-```ruby
-PromptCanary.demote(InvoiceExtractor, "v2", reason: "error rate spike")
-```
-
-When using `storage: :active_record`, demotion writes to `prompt_canary_rollout_overrides` — the override survives restarts and redeploys. The router reads it on every request and routes all traffic to the primary version until the override is cleared.
-
-To restore a version to its class-defined rollout:
-
-```ruby
-PromptCanary.restore(InvoiceExtractor, "v2")
-```
-
-The dashboard marks demoted versions with a red badge so the current override state is visible at a glance.
-
 ## Notifications
 
-Subscribe to demotion and restoration events:
+Subscribe to deployment events:
 
 ```ruby
+PromptCanary.subscribe("prompt_canary.promoted") do |payload|
+  puts "#{payload[:prompt]} #{payload[:version]} promoted"
+end
+
 PromptCanary.subscribe("prompt_canary.demoted") do |payload|
   puts "#{payload[:prompt]} #{payload[:version]} demoted — #{payload[:reason]}"
 end
