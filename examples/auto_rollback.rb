@@ -18,7 +18,9 @@ end
 
 # --- Prompt definition ---
 
-class SupportResponder < PromptCanary::Prompt
+class SupportResponder
+  include PromptCanary::Promptable
+
   version "v1" do
     model  "claude-haiku-4-5-20251001"
     system "You are a helpful customer support agent."

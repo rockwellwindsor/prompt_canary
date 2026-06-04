@@ -20,7 +20,9 @@ end
 
 # --- Prompt definition ---
 
-class InvoiceExtractor < PromptCanary::Prompt
+class InvoiceExtractor
+  include PromptCanary::Promptable
+
   version "v1" do
     model  "claude-haiku-4-5-20251001"
     system "Extract structured data from this invoice. Return plain text."
