@@ -42,6 +42,28 @@ RSpec.describe "PromptCanary.demote" do
     expect(received.first[:version]).to eq("v2")
   end
 
+  context "when demoting the primary version" do
+    it "raises CannotDemotePrimaryError if it is the only registered version" do
+      stub_const("SoloPrompt", Class.new(PromptCanary::Prompt) do
+        version("v1") { model "claude-opus-4-7" }
+      end)
+
+      expect { PromptCanary.demote(SoloPrompt, "v1") }
+        .to raise_error(PromptCanary::CannotDemotePrimaryError)
+    end
+
+    it "raises CannotDemotePrimaryError if all other versions are already demoted" do
+      PromptCanary.demote(InvoiceExtractor, "v2")
+
+      expect { PromptCanary.demote(InvoiceExtractor, "v1") }
+        .to raise_error(PromptCanary::CannotDemotePrimaryError)
+    end
+
+    it "succeeds when at least one other non-demoted version exists" do
+      expect { PromptCanary.demote(InvoiceExtractor, "v1") }.not_to raise_error
+    end
+  end
+
   context "with active_record storage" do
     before(:context) do
       require "active_record"
@@ -131,6 +153,28 @@ RSpec.describe "PromptCanary.demote" do
 
       expect(received.length).to eq(1)
       expect(received.first[:version]).to eq("v2")
+    end
+
+    context "when demoting the primary version" do
+      it "raises CannotDemotePrimaryError if it is the only registered version" do
+        stub_const("SoloPrompt", Class.new(PromptCanary::Prompt) do
+          version("v1") { model "claude-opus-4-7" }
+        end)
+
+        expect { PromptCanary.demote(SoloPrompt, "v1") }
+          .to raise_error(PromptCanary::CannotDemotePrimaryError)
+      end
+
+      it "raises CannotDemotePrimaryError if all other versions are already demoted in the DB" do
+        PromptCanary.demote(InvoiceExtractor, "v2")
+
+        expect { PromptCanary.demote(InvoiceExtractor, "v1") }
+          .to raise_error(PromptCanary::CannotDemotePrimaryError)
+      end
+
+      it "succeeds when at least one other non-demoted version exists" do
+        expect { PromptCanary.demote(InvoiceExtractor, "v1") }.not_to raise_error
+      end
     end
   end
 end

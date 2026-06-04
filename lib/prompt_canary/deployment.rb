@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module PromptCanary
+  # rubocop:disable Metrics/ModuleLength
   module Deployment
     def set_canary(prompt_class, version_name, percent)
       unless prompt_class.versions.any? { |v| v.name == version_name }
@@ -44,6 +45,8 @@ module PromptCanary
 
     def demote(prompt_class, version_name, reason: nil, triggered_by: "manual",
                triggering_metric: nil, triggering_value: nil, triggering_threshold: nil)
+      assert_can_demote_primary!(prompt_class, version_name)
+
       if ar_storage?
         require "prompt_canary/storage/active_record_adapter"
         prev_percent = effective_canary_percent(prompt_class, version_name)
@@ -80,6 +83,39 @@ module PromptCanary
 
     private
 
+    def assert_can_demote_primary!(prompt_class, version_name)
+      return unless effective_primary_name(prompt_class) == version_name
+      return unless no_viable_candidate?(prompt_class, version_name)
+
+      raise CannotDemotePrimaryError,
+            "Cannot demote #{version_name.inspect} — primary version with no viable " \
+            "candidate. Promote another version first."
+    end
+
+    def effective_primary_name(prompt_class)
+      if ar_storage? && defined?(PromptCanary::PrimaryOverride)
+        override = PrimaryOverride.find_by(prompt: prompt_class.name)
+        return override.version if override
+      end
+      prompt_class.primary_version.name
+    rescue ::ActiveRecord::ConnectionNotEstablished, ::ActiveRecord::StatementInvalid
+      prompt_class.primary_version.name
+    end
+
+    def no_viable_candidate?(prompt_class, version_name)
+      others = prompt_class.versions.reject { |v| v.name == version_name }
+      return true if others.empty?
+
+      if ar_storage?
+        require "prompt_canary/storage/active_record_adapter"
+        others.all? do |v|
+          RolloutOverride.where(prompt: prompt_class.name, version: v.name, rollout_override: 0).exists?
+        end
+      else
+        others.all?(&:demoted?)
+      end
+    end
+
     def ar_storage?
       defined?(configuration) && configuration.storage == :active_record
     end
@@ -115,4 +151,5 @@ module PromptCanary
       )
     end
   end
+  # rubocop:enable Metrics/ModuleLength
 end
