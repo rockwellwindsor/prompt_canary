@@ -123,14 +123,11 @@ RSpec.describe "PromptCanary.set_canary" do
       end
     end
 
-    it "demoted version gets zero traffic regardless of set_canary" do
+    it "raises DemotedVersionError when the version is demoted" do
       PromptCanary.demote(InvoiceExtractor, "v2")
-      PromptCanary.set_canary(InvoiceExtractor, "v2", 100)
 
-      10.times do |i|
-        result = PromptCanary::Router.choose(InvoiceExtractor, { call_id: i })
-        expect(result.name).to eq("v1")
-      end
+      expect { PromptCanary.set_canary(InvoiceExtractor, "v2", 100) }
+        .to raise_error(PromptCanary::DemotedVersionError)
     end
   end
 end

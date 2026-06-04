@@ -9,7 +9,10 @@ module PromptCanary
 
       if ar_storage?
         require "prompt_canary/storage/active_record_adapter"
-        return if RolloutOverride.where(prompt: prompt_class.name, version: version_name, rollout_override: 0).exists?
+        if RolloutOverride.where(prompt: prompt_class.name, version: version_name, rollout_override: 0).exists?
+          raise DemotedVersionError,
+                "#{version_name.inspect} is demoted — call restore before adjusting traffic"
+        end
 
         prev_percent = effective_canary_percent(prompt_class, version_name)
         override = RolloutOverride.find_or_initialize_by(prompt: prompt_class.name, version: version_name)

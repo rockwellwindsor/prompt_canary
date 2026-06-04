@@ -7,6 +7,7 @@ module PromptCanary
   class NoPrimaryVersionError < Error; end
   class UnknownVersionError < Error; end
   class CannotDemotePrimaryError < Error; end
+  class DemotedVersionError < Error; end
 end
 
 require_relative "prompt_canary/deployment"
