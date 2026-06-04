@@ -132,5 +132,23 @@ RSpec.describe "PromptCanary.promote" do
       result = PromptCanary::Router.choose(InvoiceExtractor, {})
       expect(result.name).to eq("v2")
     end
+
+    it "writes two events — one for the promoted version, one for the superseded primary" do
+      PromptCanary.promote(InvoiceExtractor, "v2")
+
+      expect(PromptCanary::PromptEvent.where(prompt: "InvoiceExtractor").count).to eq(2)
+    end
+
+    it "records the superseded primary transitioning to candidate" do
+      PromptCanary.promote(InvoiceExtractor, "v2")
+
+      event = PromptCanary::PromptEvent.find_by(
+        prompt: "InvoiceExtractor", version: "v1", event: "superseded"
+      )
+      expect(event).not_to be_nil
+      expect(event.previous_status).to eq("primary")
+      expect(event.new_status).to eq("candidate")
+      expect(event.triggered_by).to eq("manual")
+    end
   end
 end

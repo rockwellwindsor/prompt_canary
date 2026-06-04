@@ -24,18 +24,19 @@ module PromptCanary
     end
 
     def promote(prompt_class, version_name, reason: nil)
-      unless prompt_class.versions.any? { |v| v.name == version_name }
-        raise UnknownVersionError, "#{version_name.inspect} is not a registered version of #{prompt_class}"
-      end
+      assert_version_registered!(prompt_class, version_name)
 
       if ar_storage?
         require "prompt_canary/storage/active_record_adapter"
+        prev_primary = effective_primary_name(prompt_class)
+        prev_status  = current_version_status(prompt_class, version_name)
         override = PrimaryOverride.find_or_initialize_by(prompt: prompt_class.name)
         override.created_at ||= Time.now
         override.update!(version: version_name)
         record_event(prompt: prompt_class.name, version: version_name, event: "promoted",
-                     previous_status: "candidate", new_status: "primary",
+                     previous_status: prev_status, new_status: "primary",
                      reason: reason, triggered_by: "manual")
+        record_superseded_event(prompt_class, prev_primary, version_name)
       else
         prompt_class.promote_to_primary!(version_name)
       end
@@ -81,6 +82,24 @@ module PromptCanary
     end
 
     private
+
+    def record_superseded_event(prompt_class, prev_primary, promoted_name)
+      return unless prev_primary && prev_primary != promoted_name
+
+      record_event(prompt: prompt_class.name, version: prev_primary, event: "superseded",
+                   previous_status: "primary", new_status: "candidate", triggered_by: "manual")
+    end
+
+    def current_version_status(prompt_class, version_name)
+      return "primary" if effective_primary_name(prompt_class) == version_name
+      return "demoted" if RolloutOverride.where(
+        prompt: prompt_class.name, version: version_name, rollout_override: 0
+      ).exists?
+
+      "candidate"
+    rescue ::ActiveRecord::ConnectionNotEstablished, ::ActiveRecord::StatementInvalid
+      "candidate"
+    end
 
     def assert_version_registered!(prompt_class, version_name)
       return if prompt_class.versions.any? { |v| v.name == version_name }

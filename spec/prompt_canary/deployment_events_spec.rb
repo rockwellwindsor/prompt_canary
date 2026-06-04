@@ -82,9 +82,8 @@ RSpec.describe "Deployment audit events" do
     it "writes a promoted event" do
       PromptCanary.promote(InvoiceExtractor, "v2", reason: "passed canary")
 
-      event = PromptCanary::PromptEvent.last
-      expect(event.event).to eq("promoted")
-      expect(event.prompt).to eq("InvoiceExtractor")
+      event = PromptCanary::PromptEvent.find_by(prompt: "InvoiceExtractor", version: "v2", event: "promoted")
+      expect(event).not_to be_nil
       expect(event.version).to eq("v2")
       expect(event.new_status).to eq("primary")
       expect(event.previous_status).to eq("candidate")
