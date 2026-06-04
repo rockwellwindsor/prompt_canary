@@ -1,5 +1,40 @@
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-03
+
+### Added
+
+- `PromptCanary.promote` — marks a version as primary at runtime; the previous primary becomes a candidate. Writes `PrimaryOverride` to DB so the designation survives restarts. Does not change traffic percentages.
+- `PromptCanary.set_canary` — adjusts a version's canary traffic percentage at runtime without a deploy. Independent of status. Raises `ArgumentError` if percent is zero — use `demote` to stop traffic.
+- `PromptCanary::PromptEvent` AR model — persists a full audit trail to `prompt_canary_events` with event type, previous/new status, previous/new percent, reason, triggered-by, and monitor metric fields.
+- All deployment operations (`promote`, `demote`, `restore`, `set_canary`) write audit events to `prompt_canary_events`.
+- `promote` writes two events: one for the promoted version and a `superseded` event for the displaced primary.
+- Monitor passes `triggered_by: "monitor"` and metric metadata (`triggering_metric`, `triggering_value`, `triggering_threshold`) through `demote` so auto-rollbacks are distinguishable from manual ones in the audit trail.
+- `CannotDemotePrimaryError` — raised when attempting to demote the primary version with no other viable candidate, preventing the system from being left without a route target.
+- `DemotedVersionError` — raised when `set_canary` targets a demoted version. Call `restore` first.
+- `Version#demoted?` — tracks demoted state in memory for non-AR storage paths.
+- `Deployment` module — extracted from `PromptCanary` to group the four runtime operations (`promote`, `demote`, `restore`, `set_canary`) with a clear SRP boundary.
+- CLI `promote` subcommand — `prompt_canary promote PromptClass version [--reason "..."]`
+- CLI `history` subcommand — `prompt_canary history PromptClass [--since 7d]`; validates period format.
+- CLI `status` subcommand — `prompt_canary status PromptClass`; shows current status and traffic for each version.
+- Dashboard Promote button — appears on the show page for candidate versions; absent for primary and demoted versions.
+- Dashboard deployment history — show page surfaces the last 10 `PromptEvent` rows so operators can see what happened to a prompt without leaving the dashboard.
+- Generator now creates all four tables in a single migration: `prompt_canary_calls`, `prompt_canary_rollout_overrides`, `prompt_canary_primary_overrides`, `prompt_canary_events`.
+
+### Changed
+
+- `demote` is now idempotent via `find_or_initialize_by` — demoting an already-demoted version does not error or create duplicate rows.
+- `restore` restores the pre-demotion traffic percentage (stored at demotion time) rather than defaulting to zero.
+- Router reads `PrimaryOverride` before falling back to first-declared default — DB-promoted versions survive restarts.
+- `--since` validation in `history` command — invalid formats (e.g. `abc`, `0d`) exit with a clear error instead of silently querying all records.
+
+### Breaking Changes
+
+| Change | Migration |
+|---|---|
+| `stable: true` removed from version DSL | Delete `stable: true` from all version declarations. The first declared version is primary automatically. |
+| `set_canary(prompt, version, 0)` raises `ArgumentError` | Use `PromptCanary.demote` to stop traffic to a version. |
+
 ## [0.2.0] - 2026-05-30
 
 ### Added
