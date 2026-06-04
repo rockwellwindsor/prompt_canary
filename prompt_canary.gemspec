@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
     ls.readlines("\x0", chomp: true).reject do |f|
       (f == gemspec) ||
         f.start_with?(*%w[bin/ Gemfile .gitignore .rspec spec/ .github/ .rubocop.yml claude/]) ||
-          f.end_with?(".db")
+        f.end_with?(".db")
     end
   end
   spec.bindir = "exe"
