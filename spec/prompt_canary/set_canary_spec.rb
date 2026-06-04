@@ -29,6 +29,11 @@ RSpec.describe "PromptCanary.set_canary" do
     expect(version.rollout[:percent]).to eq(50)
   end
 
+  it "raises ArgumentError when percent is zero" do
+    expect { PromptCanary.set_canary(InvoiceExtractor, "v2", 0) }
+      .to raise_error(ArgumentError, /use `demote`/)
+  end
+
   it "does not change primary designation" do
     PromptCanary.set_canary(InvoiceExtractor, "v2", 100)
 

@@ -4,9 +4,8 @@ module PromptCanary
   # rubocop:disable Metrics/ModuleLength
   module Deployment
     def set_canary(prompt_class, version_name, percent)
-      unless prompt_class.versions.any? { |v| v.name == version_name }
-        raise UnknownVersionError, "#{version_name.inspect} is not a registered version of #{prompt_class}"
-      end
+      assert_valid_canary_percent!(percent)
+      assert_version_registered!(prompt_class, version_name)
 
       if ar_storage?
         require "prompt_canary/storage/active_record_adapter"
@@ -82,6 +81,16 @@ module PromptCanary
     end
 
     private
+
+    def assert_version_registered!(prompt_class, version_name)
+      return if prompt_class.versions.any? { |v| v.name == version_name }
+
+      raise UnknownVersionError, "#{version_name.inspect} is not a registered version of #{prompt_class}"
+    end
+
+    def assert_valid_canary_percent!(percent)
+      raise ArgumentError, "percent must be positive — use `demote` to stop traffic" if percent.zero?
+    end
 
     def assert_can_demote_primary!(prompt_class, version_name)
       return unless effective_primary_name(prompt_class) == version_name
